@@ -1,0 +1,12 @@
+{
+  "name": "Clock",
+  "intervalMs": 1000,
+  "background": { "color": "#000000" },
+  "widgets": [
+    { "type": "arc", "x": 240, "y": 240, "radius": 222, "thickness": 6, "startAngle": -90, "sweepAngle": 360,
+      "value": "cpu.temp", "min": 30, "max": 95, "color": "#2EE6A6", "colorEnd": "#FF3B5C", "track": "#14FFFFFF", "roundCaps": false },
+    { "type": "text", "x": 240, "y": 210, "text": "{time:HH:mm}", "size": 120, "bold": true, "color": "#FFFFFF" },
+    { "type": "text", "x": 240, "y": 300, "text": "{date:dddd, d MMMM}", "size": 26, "color": "#9AA5B1" },
+    { "type": "text", "x": 240, "y": 370, "text": "CPU {cpu.temp:0}°   GPU {gpu.temp:0}°", "size": 26, "bold": true, "color": "#2EE6A6" }
+  ]
+}

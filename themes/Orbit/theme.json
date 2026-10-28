@@ -1,0 +1,21 @@
+{
+  // Three rings: CPU, GPU and memory load. Time and temperatures in the middle.
+  "name": "Orbit",
+  "intervalMs": 1000,
+  "background": { "color": "#03060B" },
+  "widgets": [
+    { "type": "arc", "x": 240, "y": 240, "radius": 222, "thickness": 14, "startAngle": 120, "sweepAngle": 300,
+      "value": "cpu.load", "color": "#00D1FF", "track": "#2600D1FF" },
+    { "type": "arc", "x": 240, "y": 240, "radius": 198, "thickness": 14, "startAngle": 120, "sweepAngle": 300,
+      "value": "gpu.load", "color": "#8A5CFF", "track": "#268A5CFF" },
+    { "type": "arc", "x": 240, "y": 240, "radius": 174, "thickness": 14, "startAngle": 120, "sweepAngle": 300,
+      "value": "ram.load", "color": "#22C55E", "track": "#2622C55E" },
+    { "type": "text", "x": 240, "y": 168, "text": "{date:dddd}", "size": 22, "color": "#8FA3B8" },
+    { "type": "text", "x": 240, "y": 222, "text": "{time:HH:mm}", "size": 84, "bold": true, "color": "#FFFFFF" },
+    { "type": "text", "x": 180, "y": 300, "text": "{cpu.temp:0}°", "size": 34, "bold": true, "color": "#00D1FF" },
+    { "type": "text", "x": 300, "y": 300, "text": "{gpu.temp:0}°", "size": 34, "bold": true, "color": "#8A5CFF" },
+    { "type": "text", "x": 180, "y": 330, "text": "CPU", "size": 16, "color": "#8FA3B8" },
+    { "type": "text", "x": 300, "y": 330, "text": "GPU", "size": 16, "color": "#8FA3B8" },
+    { "type": "text", "x": 240, "y": 418, "text": "{cpu.load:0} · {gpu.load:0} · {ram.load:0} %", "size": 18, "color": "#5F7186" }
+  ]
+}

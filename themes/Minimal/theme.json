@@ -1,0 +1,13 @@
+{
+  // Just two big numbers.
+  "name": "Minimal",
+  "intervalMs": 1000,
+  "background": { "color": "#000000" },
+  "widgets": [
+    { "type": "text", "x": 240, "y": 92, "text": "CPU", "size": 22, "color": "#6B7280" },
+    { "type": "text", "x": 240, "y": 162, "text": "{cpu.temp:0}°", "size": 110, "color": "#FFFFFF" },
+    { "type": "bar", "x": 170, "y": 239, "width": 140, "height": 2, "value": "none", "track": "#33FFFFFF" },
+    { "type": "text", "x": 240, "y": 318, "text": "{gpu.temp:0}°", "size": 110, "color": "#FFFFFF" },
+    { "type": "text", "x": 240, "y": 390, "text": "GPU", "size": 22, "color": "#6B7280" }
+  ]
+}

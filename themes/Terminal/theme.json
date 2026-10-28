@@ -1,0 +1,20 @@
+{
+  // Amber monochrome, like an old terminal.
+  "name": "Terminal",
+  "intervalMs": 1000,
+  "background": { "color": "#0C0700" },
+  "widgets": [
+    { "type": "text", "x": 240, "y": 100, "text": "{time:HH:mm:ss}", "font": "Consolas", "size": 44, "bold": true, "color": "#FFB000" },
+    { "type": "text", "x": 240, "y": 140, "text": "{date:dd.MM.yyyy}", "font": "Consolas", "size": 20, "color": "#9A6A00" },
+    { "type": "text", "x": 90, "y": 200, "align": "left", "text": "CPU {cpu.temp:0}°C", "font": "Consolas", "size": 34, "color": "#FFB000" },
+    { "type": "text", "x": 390, "y": 200, "align": "right", "text": "{cpu.load:0}%", "font": "Consolas", "size": 34, "color": "#FFB000" },
+    { "type": "bar", "x": 90, "y": 226, "width": 300, "height": 6, "value": "cpu.load", "color": "#FFB000", "track": "#332300" },
+    { "type": "text", "x": 90, "y": 270, "align": "left", "text": "GPU {gpu.temp:0}°C", "font": "Consolas", "size": 34, "color": "#FFB000" },
+    { "type": "text", "x": 390, "y": 270, "align": "right", "text": "{gpu.load:0}%", "font": "Consolas", "size": 34, "color": "#FFB000" },
+    { "type": "bar", "x": 90, "y": 296, "width": 300, "height": 6, "value": "gpu.load", "color": "#FFB000", "track": "#332300" },
+    { "type": "text", "x": 90, "y": 340, "align": "left", "text": "RAM {ram.used:0.0}G", "font": "Consolas", "size": 34, "color": "#FFB000" },
+    { "type": "text", "x": 390, "y": 340, "align": "right", "text": "{ram.load:0}%", "font": "Consolas", "size": 34, "color": "#FFB000" },
+    { "type": "bar", "x": 90, "y": 366, "width": 300, "height": 6, "value": "ram.load", "color": "#FFB000", "track": "#332300" },
+    { "type": "text", "x": 240, "y": 410, "text": "> _", "font": "Consolas", "size": 22, "color": "#9A6A00" }
+  ]
+}

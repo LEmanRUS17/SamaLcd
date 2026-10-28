@@ -1,0 +1,23 @@
+{
+  // Round 480x480 panel. Coordinates are pixels from the top-left corner.
+  "name": "Dashboard",
+  "intervalMs": 1000,
+  "background": { "color": "#05080D" },
+  "widgets": [
+    { "type": "arc", "x": 240, "y": 240, "radius": 218, "thickness": 18, "startAngle": 135, "sweepAngle": 270,
+      "value": "cpu.load", "color": "#00D1FF", "colorEnd": "#FF3B5C", "track": "#1AFFFFFF" },
+    { "type": "arc", "x": 240, "y": 240, "radius": 190, "thickness": 10, "startAngle": 135, "sweepAngle": 270,
+      "value": "gpu.load", "color": "#8A5CFF", "colorEnd": "#FF8A00", "track": "#14FFFFFF" },
+
+    { "type": "text", "x": 240, "y": 112, "text": "CPU", "size": 28, "color": "#8FA3B8", "bold": true },
+    { "type": "text", "x": 240, "y": 188, "text": "{cpu.temp:0}°", "size": 104, "bold": true, "color": "#FFFFFF" },
+    { "type": "text", "x": 240, "y": 262, "text": "{cpu.load:0}%  ·  {cpu.power:0} W", "size": 24, "color": "#00D1FF" },
+
+    // a bar without a value is just its track: used here as a divider line
+    { "type": "bar", "x": 140, "y": 300, "width": 200, "height": 2, "value": "none", "track": "#26FFFFFF" },
+
+    { "type": "text", "x": 240, "y": 338, "text": "GPU {gpu.temp:0}°  {gpu.load:0}%", "size": 32, "bold": true, "color": "#C9B8FF" },
+    { "type": "text", "x": 240, "y": 378, "text": "RAM {ram.load:0}%", "size": 24, "color": "#8FA3B8" },
+    { "type": "text", "x": 240, "y": 428, "text": "{time:HH:mm}", "size": 26, "bold": true, "color": "#FFFFFF" }
+  ]
+}

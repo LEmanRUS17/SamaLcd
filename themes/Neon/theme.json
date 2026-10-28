@@ -1,0 +1,17 @@
+{
+  // Glowing ring for GPU load around the GPU temperature.
+  "name": "Neon",
+  "intervalMs": 1000,
+  "background": { "color": "#0B0414" },
+  "widgets": [
+    { "type": "arc", "x": 240, "y": 240, "radius": 205, "thickness": 34, "startAngle": 140, "sweepAngle": 260,
+      "value": "gpu.load", "color": "#26FF2BD6", "track": "#00000000", "roundCaps": true },
+    { "type": "arc", "x": 240, "y": 240, "radius": 205, "thickness": 12, "startAngle": 140, "sweepAngle": 260,
+      "value": "gpu.load", "color": "#FF2BD6", "colorEnd": "#00F0FF", "track": "#22FFFFFF" },
+    { "type": "text", "x": 240, "y": 140, "text": "GPU", "size": 26, "bold": true, "color": "#FF2BD6" },
+    { "type": "text", "x": 240, "y": 215, "text": "{gpu.temp:0}°", "size": 116, "bold": true, "color": "#F5E9FF" },
+    { "type": "text", "x": 240, "y": 290, "text": "{gpu.load:0}%  ·  {gpu.power:0} W", "size": 24, "color": "#00F0FF" },
+    { "type": "text", "x": 240, "y": 352, "text": "CPU {cpu.temp:0}°  {cpu.load:0}%", "size": 26, "bold": true, "color": "#B48CFF" },
+    { "type": "text", "x": 240, "y": 400, "text": "{time:HH:mm}", "size": 24, "color": "#7A6A99" }
+  ]
+}

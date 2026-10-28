@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{12969980-CD1F-4FC5-98A1-9D6D39EAD3B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamaLcd.Core", "src\SamaLcd.Core\SamaLcd.Core.csproj", "{77371906-5343-4B95-91D2-A0FA4A8F1A5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamaLcd", "src\SamaLcd\SamaLcd.csproj", "{8B85FDE9-0B86-4BCE-A857-2F633BD637C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamaLcd.Cli", "src\SamaLcd.Cli\SamaLcd.Cli.csproj", "{9FA14278-CD88-4317-A876-8A873EFA98CD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B9D2A8D0-55C2-4E8C-A7B1-B6A27DEF4694}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamaLcd.Tests", "tests\SamaLcd.Tests\SamaLcd.Tests.csproj", "{D16EF3F3-ED6A-49C5-8AEF-7FE7FF0381BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{77371906-5343-4B95-91D2-A0FA4A8F1A5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77371906-5343-4B95-91D2-A0FA4A8F1A5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77371906-5343-4B95-91D2-A0FA4A8F1A5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77371906-5343-4B95-91D2-A0FA4A8F1A5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B85FDE9-0B86-4BCE-A857-2F633BD637C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B85FDE9-0B86-4BCE-A857-2F633BD637C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B85FDE9-0B86-4BCE-A857-2F633BD637C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B85FDE9-0B86-4BCE-A857-2F633BD637C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FA14278-CD88-4317-A876-8A873EFA98CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FA14278-CD88-4317-A876-8A873EFA98CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FA14278-CD88-4317-A876-8A873EFA98CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FA14278-CD88-4317-A876-8A873EFA98CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D16EF3F3-ED6A-49C5-8AEF-7FE7FF0381BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D16EF3F3-ED6A-49C5-8AEF-7FE7FF0381BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D16EF3F3-ED6A-49C5-8AEF-7FE7FF0381BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D16EF3F3-ED6A-49C5-8AEF-7FE7FF0381BE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{77371906-5343-4B95-91D2-A0FA4A8F1A5E} = {12969980-CD1F-4FC5-98A1-9D6D39EAD3B9}
+		{8B85FDE9-0B86-4BCE-A857-2F633BD637C4} = {12969980-CD1F-4FC5-98A1-9D6D39EAD3B9}
+		{9FA14278-CD88-4317-A876-8A873EFA98CD} = {12969980-CD1F-4FC5-98A1-9D6D39EAD3B9}
+		{D16EF3F3-ED6A-49C5-8AEF-7FE7FF0381BE} = {B9D2A8D0-55C2-4E8C-A7B1-B6A27DEF4694}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,21 @@
+{
+  // Two dials: CPU and GPU temperature, loads underneath.
+  "name": "Gauges",
+  "intervalMs": 1000,
+  "background": { "color": "#0A0D12" },
+  "widgets": [
+    { "type": "text", "x": 240, "y": 92, "text": "{time:HH:mm}", "size": 40, "bold": true, "color": "#FFFFFF" },
+    { "type": "arc", "x": 140, "y": 245, "radius": 88, "thickness": 14, "startAngle": 135, "sweepAngle": 270,
+      "value": "cpu.temp", "min": 20, "max": 95, "color": "#22C55E", "colorEnd": "#FF3B5C", "track": "#1FFFFFFF" },
+    { "type": "arc", "x": 340, "y": 245, "radius": 88, "thickness": 14, "startAngle": 135, "sweepAngle": 270,
+      "value": "gpu.temp", "min": 20, "max": 90, "color": "#22C55E", "colorEnd": "#FF3B5C", "track": "#1FFFFFFF" },
+    { "type": "text", "x": 140, "y": 240, "text": "{cpu.temp:0}°", "size": 52, "bold": true, "color": "#FFFFFF" },
+    { "type": "text", "x": 340, "y": 240, "text": "{gpu.temp:0}°", "size": 52, "bold": true, "color": "#FFFFFF" },
+    { "type": "text", "x": 140, "y": 322, "text": "CPU", "size": 22, "bold": true, "color": "#00D1FF" },
+    { "type": "text", "x": 340, "y": 322, "text": "GPU", "size": 22, "bold": true, "color": "#8A5CFF" },
+    { "type": "bar", "x": 85, "y": 362, "width": 110, "height": 8, "value": "cpu.load", "color": "#00D1FF" },
+    { "type": "bar", "x": 285, "y": 362, "width": 110, "height": 8, "value": "gpu.load", "color": "#8A5CFF" },
+    { "type": "text", "x": 140, "y": 392, "text": "{cpu.load:0}%", "size": 20, "color": "#8FA3B8" },
+    { "type": "text", "x": 340, "y": 392, "text": "{gpu.load:0}%", "size": 20, "color": "#8FA3B8" }
+  ]
+}

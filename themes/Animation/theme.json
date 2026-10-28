@@ -1,0 +1,11 @@
+{
+  // Put any GIF/PNG/JPG named background.gif here (or change the path) to show your own picture.
+  "name": "Animation",
+  "intervalMs": 1000,
+  "background": { "color": "#000000", "image": "background.gif", "fit": "cover" },
+  "widgets": [
+    { "type": "circle", "x": 240, "y": 400, "radius": 58, "color": "#99000000" },
+    { "type": "text", "x": 240, "y": 385, "text": "{cpu.temp:0}°", "size": 44, "bold": true, "color": "#FFFFFF" },
+    { "type": "text", "x": 240, "y": 425, "text": "CPU", "size": 18, "color": "#BBBBBB" }
+  ]
+}
