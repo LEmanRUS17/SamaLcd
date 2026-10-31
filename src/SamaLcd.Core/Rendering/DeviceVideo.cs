@@ -1,3 +1,4 @@
+using L = SamaLcd.Core.Localization.Localizer;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
@@ -29,9 +30,9 @@ public static class DeviceVideo
 
     public static PreparedVideo Prepare(string source, ImageFit fit, int rotation, int width, int height, Action<string>? log = null)
     {
-        var ffmpeg = VideoSource.FindFfmpeg() ?? throw new FileNotFoundException("ffmpeg.exe not found: put it next to SamaLcd.exe");
+        var ffmpeg = VideoSource.FindFfmpeg() ?? throw new FileNotFoundException(L.Get("Video requires ffmpeg.exe next to SamaLcd.exe."));
         var info = new FileInfo(source);
-        if (!info.Exists) throw new FileNotFoundException("Background file not found", source);
+        if (!info.Exists) throw new FileNotFoundException(L.Get("Background file not found"), source);
 
         var key = $"{info.FullName}|{info.Length}|{info.LastWriteTimeUtc.Ticks}|{fit}|{rotation}|{width}x{height}";
         var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(key)))[..10].ToLowerInvariant();
@@ -56,7 +57,7 @@ public static class DeviceVideo
 
         if (!File.Exists(mp4))
         {
-            log?.Invoke($"Converting {info.Name} for the panel...");
+            log?.Invoke(L.Get("Converting {0} for the panel…", info.Name));
             var tmp = mp4 + ".tmp.mp4";
             Run(ffmpeg, ["-y", "-i", source, "-vf", $"{scale}{turn},setsar=1:1", "-c:v", "libx264", "-b:v", "2400k", "-bufsize", "2400k",
                 "-r", "24", "-an", "-pix_fmt", "yuv420p", "-f", "mp4", tmp]);
@@ -77,12 +78,12 @@ public static class DeviceVideo
         if (!p.WaitForExit(10 * 60_000))
         {
             p.Kill();
-            throw new TimeoutException("ffmpeg took too long");
+            throw new TimeoutException(L.Get("ffmpeg took too long"));
         }
         if (p.ExitCode != 0)
         {
             var lines = err.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            throw new IOException($"ffmpeg failed: {lines.LastOrDefault()?.Trim()}");
+            throw new IOException(L.Get("ffmpeg failed: {0}", lines.LastOrDefault()?.Trim() ?? ""));
         }
     }
 }

@@ -7,6 +7,13 @@ public enum BackgroundMode { Theme, Color, File, Gallery }
 /// <summary>User settings, stored in %APPDATA%\SamaLcd\settings.json.</summary>
 public sealed class AppSettings
 {
+    private string _language = "en";
+    /// <summary>UI language; existing settings without this field default to English.</summary>
+    public string Language
+    {
+        get => _language;
+        set => _language = Localization.Localizer.Normalize(value);
+    }
     public string Theme { get; set; } = "Dashboard";
     /// <summary>Folder with themes; empty means the "themes" folder next to the program.</summary>
     public string ThemesDirectory { get; set; } = "";

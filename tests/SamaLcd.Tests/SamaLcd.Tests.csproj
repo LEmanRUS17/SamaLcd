@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <None Include="Reference\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\SamaLcd\wwwroot\locales.js" Link="locales.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

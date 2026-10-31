@@ -7,19 +7,20 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+const tr = (key, ...args) => I18n.t(key, ...args);
 const CUSTOM = '@custom';
 const SENSOR_KEYS = [
-  ['cpu.temp', 'Температура CPU', '°'], ['cpu.load', 'Загрузка CPU', '%'], ['cpu.clock', 'Частота CPU', ' МГц'],
-  ['cpu.power', 'Мощность CPU', ' Вт'], ['gpu.temp', 'Температура GPU', '°'], ['gpu.hotspot', 'Горячая точка GPU', '°'],
-  ['gpu.load', 'Загрузка GPU', '%'], ['gpu.clock', 'Частота GPU', ' МГц'], ['gpu.power', 'Мощность GPU', ' Вт'],
-  ['gpu.mem.load', 'Видеопамять', '%'], ['gpu.mem.used', 'Видеопамять, занято', ' МБ'], ['gpu.fan', 'Вентилятор GPU', ' об/м'],
-  ['ram.load', 'Загрузка ОЗУ', '%'], ['ram.used', 'ОЗУ, занято', ' ГБ'], ['ram.free', 'ОЗУ, свободно', ' ГБ'],
-  ['board.temp', 'Температура платы', '°'], ['pump.rpm', 'Помпа', ' об/м'], ['fan.rpm', 'Вентилятор CPU', ' об/м'],
+  ['cpu.temp', "CPU temperature", '°'], ['cpu.load', "CPU load", '%'], ['cpu.clock', "CPU clock", " MHz"],
+  ['cpu.power', "CPU power", " W"], ['gpu.temp', "GPU temperature", '°'], ['gpu.hotspot', "GPU hotspot", '°'],
+  ['gpu.load', "GPU load", '%'], ['gpu.clock', "GPU clock", " MHz"], ['gpu.power', "GPU power", " W"],
+  ['gpu.mem.load', "GPU memory load", '%'], ['gpu.mem.used', "GPU memory used", " MB"], ['gpu.fan', "GPU fan", " rpm"],
+  ['ram.load', "RAM load", '%'], ['ram.used', "RAM used", " GB"], ['ram.free', "RAM free", " GB"],
+  ['board.temp', "Board temperature", '°'], ['pump.rpm', "Pump", " rpm"], ['fan.rpm', "CPU fan", " rpm"],
 ];
-const SHORT = { 'cpu.temp': 'CPU', 'gpu.temp': 'GPU', 'cpu.load': 'CPU', 'gpu.load': 'GPU', 'ram.load': 'RAM', 'pump.rpm': 'Помпа' };
+const SHORT = { 'cpu.temp': 'CPU', 'gpu.temp': 'GPU', 'cpu.load': 'CPU', 'gpu.load': 'GPU', 'ram.load': 'RAM', 'pump.rpm': "Pump" };
 const TEXT_COLORS = ['#FFFFFF', '#8FA3B8', '#00D1FF', '#3B82F6', '#8A5CFF', '#C9B8FF', '#22C55E', '#A3E635', '#FACC15', '#FF8A00', '#FF3B5C', '#E11D48'];
 const BG_COLORS = ['#000000', '#05080D', '#0B1220', '#111827', '#1E1B4B', '#3B0764', '#052E16', '#450A0A', '#FFFFFF', '#00D1FF', '#8A5CFF', '#FF3B5C', '#FF8A00', '#22C55E'];
-const KIND_NAMES = { sensor: 'Значение', bar: 'Шкала', text: 'Надпись', time: 'Время', date: 'Дата' };
+const KIND_NAMES = { sensor: "Value", bar: "Bar", text: "Text", time: "Time", date: "Date" };
 
 const host = window.chrome?.webview
   ? { send: m => window.chrome.webview.postMessage(m), on: f => window.chrome.webview.addEventListener('message', e => f(e.data)) }
@@ -51,7 +52,7 @@ function set(key, value) { host.send({ cmd: 'set', key, value }); }
 function palette(el, colors, current, pick) {
   const cur = (current || '').toUpperCase();
   el.innerHTML = colors.map(c => `<div class="swatch${c === cur ? ' active' : ''}" style="background:${c}" data-color="${c}" title="${c}"></div>`).join('') +
-    `<label class="swatch custom${colors.includes(cur) ? '' : ' active'}" title="Свой цвет"><input type="color" value="${cur.slice(0, 7) || '#ffffff'}"></label>` +
+    `<label class="swatch custom${colors.includes(cur) ? '' : ' active'}" title="${esc(tr("Custom color"))}"><input type="color" value="${cur.slice(0, 7) || '#ffffff'}"></label>` +
     `<span class="font-mono text-xs opacity-60 ml-1">${esc(cur)}</span>`;
   el.onclick = e => {
     const s = e.target.closest('[data-color]');
@@ -68,7 +69,7 @@ function toast(text, kind = 'info') {
   setTimeout(() => t.remove(), 4000);
 }
 
-function sensorName(key) { return SENSOR_KEYS.find(k => k[0] === key)?.[1] ?? key; }
+function sensorName(key) { return tr(SENSOR_KEYS.find(k => k[0] === key)?.[1] ?? key); }
 function sensorValue(key) {
   if (key in aliasValues) return aliasValues[key];
   return sensorList.find(s => s.id === key)?.value ?? null;
@@ -82,15 +83,22 @@ function activateTab(name) {
   for (const p of $$('.page')) p.classList.toggle('hidden', p.dataset.page !== name);
   try { localStorage.setItem('tab', name); } catch { }
   if (name === 'sensors' || name === 'data') host.send({ cmd: 'sensors' });
+  if (name === 'data' && layout) renderEditor(); // the hidden canvas has no measurable size
 }
 $('#tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) activateTab(t.dataset.tab); });
 
 // ---------- state from the host ----------
 
-function applyState(s) {
+let stateRevision = 0;
+async function applyState(s) {
+  const revision = ++stateRevision;
+  const languageChanged = I18n.language !== I18n.normalize(s.language);
+  await I18n.setLanguage(s.language);
+  if (revision !== stateRevision) return;
+  $('#language').value = I18n.language;
   state = s;
   const custom = s.theme === CUSTOM;
-  $('#variantBadge').textContent = custom ? 'Своя раскладка' : s.theme;
+  $('#variantBadge').textContent = custom ? tr("Custom layout") : s.theme;
   $('#brightness').value = s.brightness;
   $('#brightnessValue').textContent = s.brightness + ' %';
   $('#paused').checked = s.paused;
@@ -105,16 +113,16 @@ function applyState(s) {
   $('#bgColorBox').classList.toggle('hidden', s.bgMode !== 'color');
   $('#bgFileBox').classList.toggle('hidden', s.bgMode !== 'file');
   palette($('#bgPalette'), BG_COLORS, s.bgColor, c => set('bgColor', c));
-  $('#bgFileName').textContent = s.bgFileName || 'файл не выбран';
+  $('#bgFileName').textContent = s.bgFileName || tr("No file selected");
   $('#bgFileKind').textContent = s.bgFileKind || '';
   $('#cpuHint').classList.toggle('hidden', !s.cpuHint);
   $('#cpuHintData').classList.toggle('hidden', !s.cpuHint);
-  $('#deviceInfo').textContent = s.device || 'экран не подключён';
+  $('#deviceInfo').textContent = s.device || tr("Display not connected");
 
-  $('#variants').innerHTML = [...s.themes.map(t => ({ ...t, ...t.thumb })), { name: CUSTOM, title: 'Своя раскладка', ...s.customThumb }].map(t => `
+  $('#variants').innerHTML = [...s.themes.map(t => ({ ...t, ...t.thumb })), { name: CUSTOM, title: tr("Custom layout"), ...s.customThumb }].map(t => `
     <div class="variant card bg-base-200 w-36 ${t.name === s.theme ? 'active' : ''}" data-name="${esc(t.name)}">
       <div class="card-body p-3 gap-2 items-center">
-        <div class="thumb w-full">${mediaHtml(t.media)}${t.image ? `<img src="${t.image}" alt="">` : '<span class="opacity-50 text-sm">нет</span>'}</div>
+        <div class="thumb w-full">${mediaHtml(t.media)}${t.image ? `<img src="${t.image}" alt="">` : `<span class="opacity-50 text-sm">${esc(tr("None"))}</span>`}</div>
         <div class="text-sm font-medium text-center">${t.name === CUSTOM ? '✏️ ' : ''}${esc(t.title)}</div>
       </div>
     </div>`).join('');
@@ -125,13 +133,28 @@ function applyState(s) {
     layout = s.layout;
     if (selected >= layout.items.length) selected = -1;
     renderEditor();
-  }
+  } else if (languageChanged && layout) renderEditor();
+  renderSensors();
+  renderMiniStats();
+  if (lastStatus) renderStatus(lastStatus);
 }
 
 $('#variants').addEventListener('click', e => {
   const v = e.target.closest('.variant');
   if (v && v.dataset.name !== state.theme) set('theme', v.dataset.name);
 });
+
+let lastStatus = null;
+function renderStatus(m) {
+  $('#status').textContent = m.textKey ? tr(m.textKey, ...(m.textArgs || [])) : m.text;
+  const c = $('#conn');
+  c.className = `badge badge-soft gap-1 ml-2 whitespace-nowrap ${m.paused ? 'badge-warning' : m.connected ? 'badge-success' : 'badge-error'}`;
+  c.innerHTML = `<span class="status ${m.paused ? 'status-warning' : m.connected ? 'status-success' : 'status-error'}"></span> ` +
+    esc(tr(m.paused ? 'Paused' : m.connected ? 'Display connected' : 'No display'));
+  $('#traffic').textContent = m.framesSent > 0 ? tr('Frames sent: {0}, {1:0.0} MB', m.framesSent, m.megabytesSent) : '';
+  $('#deviceInfo').textContent = m.device || tr('Display not connected');
+}
+$('#language').onchange = e => set('language', e.target.value);
 
 host.on(m => {
   switch (m.type) {
@@ -143,19 +166,10 @@ host.on(m => {
       setMedia($('#canvasMedia'), m.media);
       $('#previewEmpty').classList.add('hidden');
       break;
-    case 'status': {
-      $('#status').textContent = m.text;
-      const c = $('#conn');
-      c.className = `badge badge-soft gap-1 ml-2 whitespace-nowrap ${m.paused ? 'badge-warning' : m.connected ? 'badge-success' : 'badge-error'}`;
-      c.innerHTML = `<span class="status ${m.paused ? 'status-warning' : m.connected ? 'status-success' : 'status-error'}"></span> ` +
-        (m.paused ? 'пауза' : m.connected ? 'экран подключён' : 'нет экрана');
-      if (m.traffic) $('#traffic').textContent = m.traffic;
-      if (m.device) $('#deviceInfo').textContent = m.device;
-      break;
-    }
+    case 'status': lastStatus = m; renderStatus(m); break;
     case 'sensors':
       aliasValues = m.aliases;
-      sensorList = m.list;
+      if (m.list) sensorList = m.list;
       renderSensors();
       renderMiniStats();
       updatePropValue();
@@ -214,12 +228,12 @@ function setMedia(el, m) {
 }
 
 function renderGallery(s) {
-  const tiles = [{ file: '', name: 'Фон варианта' }, ...s.gallery];
+  const tiles = [{ file: '', name: tr("Theme background") }, ...s.gallery];
   const current = s.bgMode === 'gallery' ? s.galleryFile : s.bgMode === 'theme' ? '' : null;
   $('#gallery').innerHTML = tiles.map(t => `
     <div class="tile variant card bg-base-200 w-32 ${t.file === current ? 'active' : ''}" data-file="${esc(t.file)}" title="${esc(t.name)}">
       <div class="card-body p-2 gap-1 items-center">
-        <div class="thumb w-full">${t.media ? mediaHtml(t.media, true) : '<span class="text-xs opacity-60 text-center px-2">как задумано в варианте</span>'}</div>
+        <div class="thumb w-full">${t.media ? mediaHtml(t.media, true) : `<span class="text-xs opacity-60 text-center px-2">${esc(tr("As designed by the theme"))}</span>`}</div>
         <div class="text-xs text-center truncate w-full">${esc(t.name)}</div>
       </div>
     </div>`).join('');
@@ -244,7 +258,7 @@ function renderMiniStats() {
 function renderSensors() {
   const q = $('#sensorFilter').value.trim().toLowerCase();
   const rows = [
-    ...SENSOR_KEYS.map(([k, n, u]) => ({ id: k, name: n, hardware: 'основной ключ', type: '', value: aliasValues[k], unit: u, alias: true })),
+    ...SENSOR_KEYS.map(([k, n, u]) => ({ id: k, name: tr(n), hardware: tr("Sensor alias"), type: '', value: aliasValues[k], unit: tr(u), alias: true })),
     ...sensorList,
   ].filter(s => !q || `${s.id} ${s.name} ${s.hardware} ${s.type}`.toLowerCase().includes(q));
   $('#sensorRows').innerHTML = rows.map(s => `<tr class="${s.alias ? 'bg-base-200/50' : ''}">
@@ -275,10 +289,10 @@ function commit() {
 function describe(it) {
   switch (it.kind) {
     case 'sensor': return (it.label ? it.label + ': ' : '') + sensorName(it.key);
-    case 'bar': return 'Шкала: ' + sensorName(it.key);
-    case 'text': return it.text || 'Надпись';
-    case 'time': return 'Время ' + (it.text || 'HH:mm');
-    case 'date': return 'Дата ' + (it.text || 'dd.MM.yyyy');
+    case 'bar': return tr("Bar:") + ' ' + sensorName(it.key);
+    case 'text': return it.text || tr("Text");
+    case 'time': return tr("Time") + ' ' + (it.text || 'HH:mm');
+    case 'date': return tr("Date") + ' ' + (it.text || 'dd.MM.yyyy');
   }
   return it.kind;
 }
@@ -380,7 +394,7 @@ $('#gridSize').onchange = e => {
 };
 
 $('#resetLayout').onclick = () => {
-  if (confirm('Вернуть раскладку по умолчанию? Текущие элементы будут удалены.')) host.send({ cmd: 'resetLayout' });
+  if (confirm(tr("Reset to the default layout? Current items will be removed."))) host.send({ cmd: 'resetLayout' });
 };
 
 function freeSpot(cs, rs) {
@@ -406,7 +420,7 @@ $$('[data-add]').forEach(b => b.onclick = () => {
   Object.assign(base, {
     sensor: { label: 'CPU', unit: '°', color: '#00D1FF' },
     bar: { key: 'cpu.load', label: 'CPU {cpu.load:0}%', size: 10, color: '#00D1FF' },
-    text: { text: 'Моя надпись' },
+    text: { text: tr("My text") },
     time: { text: 'HH:mm' },
     date: { text: 'dd.MM.yyyy', color: '#8FA3B8', bold: false },
   }[kind]);
@@ -418,10 +432,10 @@ $$('[data-add]').forEach(b => b.onclick = () => {
 // ---------- properties of the selected element ----------
 
 function sensorOptions(current) {
-  const main = SENSOR_KEYS.map(([k, n]) => `<option value="${k}" ${k === current ? 'selected' : ''}>${esc(n)} — ${k}</option>`).join('');
+  const main = SENSOR_KEYS.map(([k, n]) => `<option value="${k}" ${k === current ? 'selected' : ''}>${esc(tr(n))} — ${k}</option>`).join('');
   const all = sensorList.map(s => `<option value="${esc(s.id)}" ${s.id === current ? 'selected' : ''}>${esc(s.hardware)} · ${esc(s.name)} (${esc(s.type)})</option>`).join('');
   const known = SENSOR_KEYS.some(k => k[0] === current) || sensorList.some(s => s.id === current);
-  return `<optgroup label="Основные">${main}</optgroup>` + (all ? `<optgroup label="Все датчики">${all}</optgroup>` : '') +
+  return `<optgroup label="${esc(tr("Common"))}">${main}</optgroup>` + (all ? `<optgroup label="${esc(tr("All sensors"))}">${all}</optgroup>` : '') +
     (known ? '' : `<option value="${esc(current)}" selected>${esc(current)}</option>`);
 }
 
@@ -431,60 +445,60 @@ function renderProps() {
   const p = $('#props');
   if (selected < 0) {
     p.innerHTML = `<div class="h-full grid place-items-center text-center opacity-60 py-16">
-      <div><div class="text-4xl mb-2">👆</div>Выберите элемент на экране слева<br>или добавьте новый кнопками выше.</div></div>`;
+      <div><div class="text-4xl mb-2">👆</div>${esc(tr("Select an item on the display at the left"))}<br>${esc(tr("or add one using the buttons above."))}</div></div>`;
     return;
   }
   const it = layout.items[selected];
   const k = it.kind;
   let html = `<div class="flex items-center gap-2 mb-2">
-      <span class="badge badge-primary">${KIND_NAMES[k]}</span><span class="flex-1"></span>
-      <button class="btn btn-sm btn-ghost" id="dupItem">Копия</button>
-      <button class="btn btn-sm btn-error btn-soft" id="delItem">Удалить</button></div>
+      <span class="badge badge-primary">${esc(tr(KIND_NAMES[k]))}</span><span class="flex-1"></span>
+      <button class="btn btn-sm btn-ghost" id="dupItem">${esc(tr("Duplicate"))}</button>
+      <button class="btn btn-sm btn-error btn-soft" id="delItem">${esc(tr("Delete"))}</button></div>
     <div class="grid sm:grid-cols-2 gap-x-4">`;
 
   if (k === 'sensor' || k === 'bar') {
-    html += field('Датчик', `<select class="select select-sm w-full" data-prop="key">${sensorOptions(it.key)}</select>
-      <div class="label">сейчас: <span id="liveValue" class="font-mono"></span></div>`, 'sm:col-span-2');
+    html += field(tr("Sensor"), `<select class="select select-sm w-full" data-prop="key">${sensorOptions(it.key)}</select>
+      <div class="label">${esc(tr("Now:"))} <span id="liveValue" class="font-mono"></span></div>`, 'sm:col-span-2');
   }
   if (k === 'text') {
-    html += field('Текст', `<input class="input input-sm w-full" data-prop="text" value="${esc(it.text)}" placeholder="Любой текст">
-      <div class="label whitespace-normal">можно вставлять значения: <kbd class="kbd kbd-xs">{cpu.temp:0}°</kbd> <kbd class="kbd kbd-xs">{gpu.load:0}%</kbd></div>`, 'sm:col-span-2');
+    html += field(tr("Content"), `<input class="input input-sm w-full" data-prop="text" value="${esc(it.text)}" placeholder="${esc(tr("Any text"))}">
+      <div class="label whitespace-normal">${esc(tr("You can insert values:"))} <kbd class="kbd kbd-xs">{cpu.temp:0}°</kbd> <kbd class="kbd kbd-xs">{gpu.load:0}%</kbd></div>`, 'sm:col-span-2');
   }
   if (k === 'time') {
-    html += field('Формат', `<select class="select select-sm w-full" data-prop="text">
+    html += field(tr("Format"), `<select class="select select-sm w-full" data-prop="text">
       ${['HH:mm', 'HH:mm:ss', 'H:mm', 'hh:mm tt'].map(f => `<option ${f === it.text ? 'selected' : ''}>${f}</option>`).join('')}</select>`);
   }
   if (k === 'date') {
-    html += field('Формат', `<select class="select select-sm w-full" data-prop="text">
-      ${[['dd.MM.yyyy', '28.10.2026'], ['dd.MM', '28.10'], ['d MMMM', '28 октября'], ['dddd', 'среда'], ['ddd, d MMM', 'ср, 28 окт']]
+    html += field(tr("Format"), `<select class="select select-sm w-full" data-prop="text">
+      ${[['dd.MM.yyyy', '28.10.2026'], ['dd.MM', '28.10'], ['d MMMM', new Intl.DateTimeFormat(I18n.language, {day:'numeric',month:'long'}).format(new Date(2026,9,28))], ['dddd', new Intl.DateTimeFormat(I18n.language, {weekday:'long'}).format(new Date(2026,9,28))], ['ddd, d MMM', new Intl.DateTimeFormat(I18n.language, {weekday:'short',day:'numeric',month:'short'}).format(new Date(2026,9,28))]]
         .map(([f, ex]) => `<option value="${f}" ${f === it.text ? 'selected' : ''}>${ex}</option>`).join('')}</select>`);
   }
   if (k === 'sensor') {
-    html += field('Знаков после запятой', `<div class="join" data-join="decimals">${[0, 1, 2].map(d =>
+    html += field(tr("Decimal places"), `<div class="join" data-join="decimals">${[0, 1, 2].map(d =>
       `<button class="btn btn-sm join-item ${it.decimals === d ? 'btn-primary' : ''}" data-value="${d}">${d}</button>`).join('')}</div>`);
-    html += field('Единица', `<div class="flex gap-1 flex-wrap"><input class="input input-sm w-20" data-prop="unit" value="${esc(it.unit)}">
-      ${['°', '%', ' Вт', ' МГц', ' об/м'].map(u => `<button class="btn btn-xs btn-ghost" data-unit="${u}">${u.trim()}</button>`).join('')}</div>`);
+    html += field(tr("Unit"), `<div class="flex gap-1 flex-wrap"><input class="input input-sm w-20" data-prop="unit" value="${esc(it.unit)}">
+      ${['°', '%', tr(" W"), tr(" MHz"), tr(" rpm")].map(u => `<button class="btn btn-xs btn-ghost" data-unit="${u}">${u.trim()}</button>`).join('')}</div>`);
   }
   if (k === 'bar') {
-    html += field('Максимум шкалы', `<input type="number" class="input input-sm w-28" data-prop="max" data-num value="${it.max}">`);
+    html += field(tr("Bar maximum"), `<input type="number" class="input input-sm w-28" data-prop="max" data-num value="${it.max}">`);
   }
-  html += field('Подпись сверху', `<input class="input input-sm w-full" data-prop="label" value="${esc(it.label)}" placeholder="без подписи">`);
+  html += field(tr("Top label"), `<input class="input input-sm w-full" data-prop="label" value="${esc(it.label)}" placeholder="${esc(tr("No label"))}">`);
 
   if (k === 'bar') {
-    html += field('Толщина', `<div class="flex items-center gap-3">
+    html += field(tr("Thickness"), `<div class="flex items-center gap-3">
       <input type="range" class="range range-xs range-primary flex-1" min="2" max="40" data-prop="size" data-num value="${it.size}">
       <span class="font-mono text-sm w-10 text-right" id="sizeVal">${it.size}</span></div>`);
   } else {
-    html += field('Размер шрифта', '<div class="text-sm opacity-70 whitespace-normal">подбирается по клеткам — растяните элемент за уголок</div>');
+    html += field(tr("Font size"), `<div class="text-sm opacity-70 whitespace-normal">${esc(tr("Sized to the grid cells \u2014 drag the corner to resize"))}</div>`);
   }
   if (k !== 'bar') {
-    html += field('Выравнивание', `<div class="join" data-join="align">${[['left', 'Слева'], ['center', 'По центру'], ['right', 'Справа']].map(([v, n]) =>
+    html += field(tr("Alignment"), `<div class="join" data-join="align">${[['left', tr("Left")], ['center', tr("Center")], ['right', tr("Right")]].map(([v, n]) =>
       `<button class="btn btn-sm join-item ${it.align === v ? 'btn-primary' : ''}" data-value="${v}">${n}</button>`).join('')}</div>`, 'sm:col-span-2');
-    html += field('Начертание', `<label class="label cursor-pointer gap-2"><input type="checkbox" class="toggle toggle-sm toggle-primary" data-prop="bold" ${it.bold ? 'checked' : ''}> жирный</label>`);
+    html += field(tr("Style"), `<label class="label cursor-pointer gap-2"><input type="checkbox" class="toggle toggle-sm toggle-primary" data-prop="bold" ${it.bold ? 'checked' : ''}> ${esc(tr("Bold"))}</label>`);
   }
-  html += field('Цвет', '<div class="palette" id="itemColor"></div>', 'sm:col-span-2');
-  if (it.label) html += field('Цвет подписи', '<div class="palette" id="labelColor"></div>', 'sm:col-span-2');
-  html += field('Положение (столбец, строка, ширина, высота в клетках)', ['col', 'row', 'colSpan', 'rowSpan'].map(f =>
+  html += field(tr("Color"), '<div class="palette" id="itemColor"></div>', 'sm:col-span-2');
+  if (it.label) html += field(tr("Label color"), '<div class="palette" id="labelColor"></div>', 'sm:col-span-2');
+  html += field(tr("Position (column, row, width, height in cells)"), ['col', 'row', 'colSpan', 'rowSpan'].map(f =>
     `<input type="number" class="input input-sm w-16" data-prop="${f}" data-num min="${f.endsWith('Span') ? 1 : 0}" value="${it[f]}">`).join(''), 'sm:col-span-2 pos');
   html += '</div>';
   p.innerHTML = html;
@@ -506,7 +520,7 @@ function renderProps() {
       if (prop === 'size') $('#sizeVal').textContent = v;
       if (['col', 'row', 'colSpan', 'rowSpan'].includes(prop)) clampItem(it);
       if (prop === 'key' && it.kind === 'sensor') {
-        it.unit = SENSOR_KEYS.find(x => x[0] === v)?.[2] ?? it.unit;
+        it.unit = tr(SENSOR_KEYS.find(x => x[0] === v)?.[2] ?? it.unit);
         if (!it.label || Object.values(SHORT).includes(it.label)) it.label = SHORT[v] ?? it.label;
       }
       renderItems();
@@ -560,7 +574,7 @@ function updatePropValue() {
   if (!el || selected < 0) return;
   const it = layout.items[selected];
   const v = sensorValue(it.key);
-  el.textContent = v == null ? 'нет данных' : fmt(v, it.decimals ?? 1) + (it.kind === 'sensor' ? it.unit : '');
+  el.textContent = v == null ? tr("No data") : fmt(v, it.decimals ?? 1) + (it.kind === 'sensor' ? it.unit : '');
 }
 
 // ---------- window theme ----------
@@ -578,7 +592,7 @@ try { savedTheme = localStorage.getItem('uiTheme') || 'dark'; savedTab = localSt
 setUiTheme(savedTheme !== 'light');
 activateTab(location.hash.slice(1) || savedTab);
 renderMiniStats();
-host.send({ cmd: 'ready' });
+I18n.ready.then(() => host.send({ cmd: 'ready' }));
 
 // ---------- stand-in host for opening the page in a normal browser ----------
 
@@ -586,7 +600,7 @@ function mockHost() {
   let listener = () => { };
   const themes = ['Animation', 'Clock', 'Dashboard'].map(n => ({ name: n, title: n, thumb: null }));
   const s = {
-    type: 'state', themes, theme: CUSTOM, brightness: 80, rotation: 0, bgMode: 'theme', bgColor: '#05080D', bgFileName: '',
+    type: 'state', language: I18n.savedLanguage(), themes, theme: CUSTOM, brightness: 80, rotation: 0, bgMode: 'theme', bgColor: '#05080D', bgFileName: '',
     fit: 'cover', onDevice: true, gallery: [], galleryFile: '', autostart: false, paused: false, cpuHint: true, device: 'COM4: chs_5inch.dev1_rom1.88',
     layoutVersion: 1,
     layout: { columns: 8, rows: 8, background: '#05080D', items: [
@@ -620,10 +634,10 @@ function mockHost() {
   };
   return {
     send(m) {
-      if (m.cmd === 'ready') { listener(structuredClone(s)); draw(); listener({ type: 'status', text: 'Подключено: COM4', connected: true }); }
+      if (m.cmd === 'ready') { listener(structuredClone(s)); draw(); listener({ type: 'status', textKey: 'Connected: {0}', textArgs: ['COM4'], connected: true, device: s.device }); }
       if (m.cmd === 'sensors') listener({ type: 'sensors', aliases: values, list: [{ id: '/amdcpu/0/load/0', name: 'CPU Total', hardware: 'AMD Ryzen 7 7700X', type: 'Load', value: 23 }] });
       if (m.cmd === 'layout') { s.layout = m.layout; draw(); }
-      if (m.cmd === 'set') { s[m.key] = m.value; if (m.key !== 'brightness') listener(structuredClone(s)); }
+      if (m.cmd === 'set') { s[m.key] = m.value; if (m.key === 'language') I18n.saveLanguage(m.value); if (m.key !== 'brightness') listener(structuredClone(s)); }
     },
     on(f) { listener = f; },
   };

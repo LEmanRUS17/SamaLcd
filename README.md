@@ -3,6 +3,22 @@
 Замена программы **SAMA WaterCooling** (Sama.exe) для круглого экрана 2.1" (480×480) на помпе водяного охлаждения SAMA.
 Открытый код на C# / .NET 8, который легко расширять.
 
+## Interface language / Язык интерфейса
+
+The interface defaults to **English**, including upgrades from settings files without a language field.
+Choose **App → Language** to switch immediately to **English**, **简体中文**, **日本語**, or **Русский**.
+The choice is saved as `language` (`en`, `zh-Hans`, `ja`, `ru`) in `%APPDATA%\SamaLcd\settings.json`.
+The language covers settings, layout editor, sensor aliases, tray menus, file dialogs and status messages.
+Custom captions, file names, sensor IDs and theme contents are preserved.
+
+Язык по умолчанию — английский. Русский можно выбрать на вкладке **App → Language**;
+после переключения этот пункт называется **Программа → Язык**. Выбор сохраняется автоматически.
+
+Translations are maintained in `src/SamaLcd.Core/Localization/*.json`. Native and web UI share these catalogs.
+After editing them, run `node scripts/generate-locales.mjs` to update the browser bundle, then `dotnet test`.
+The committed browser bundle keeps the standalone `wwwroot/index.html` preview working without a web server.
+Catalog completeness, format arguments, browser/native parity, English defaults and settings round trips are tested.
+
 ## Запуск
 
 Готовая сборка: `publish\SamaLcd.exe` (нужен .NET 8 Desktop Runtime, он уже установлен вместе с SDK).

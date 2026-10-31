@@ -1,3 +1,4 @@
+using L = SamaLcd.Core.Localization.Localizer;
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -29,8 +30,9 @@ sealed class MainForm : Form
     private readonly DisplayEngine _engine;
     private readonly SensorHub _sensors;
     private readonly NotifyIcon _tray;
-    private readonly ToolStripMenuItem _themesMenu = new("Вариант");
-    private readonly ToolStripMenuItem _pauseMenu = new("Пауза");
+    private readonly ToolStripMenuItem _themesMenu = new();
+    private readonly ToolStripMenuItem _pauseMenu = new();
+    private readonly ToolStripMenuItem _openMenu = new(), _exitMenu = new();
     private readonly WebView2 _web = new() { Dock = DockStyle.Fill };
     private readonly object _frameLock = new();
     private Bitmap? _lastFrame;
@@ -50,6 +52,7 @@ sealed class MainForm : Form
     public MainForm(AppSettings settings, DisplayEngine engine, SensorHub sensors)
     {
         _settings = settings;
+        L.Language = settings.Language;
         _engine = engine;
         _sensors = sensors;
 
@@ -63,11 +66,14 @@ sealed class MainForm : Form
 
         _tray = new NotifyIcon { Icon = Icon, Text = "SAMA LCD", Visible = true };
         var menu = new ContextMenuStrip();
-        menu.Items.Add("Открыть", null, (_, _) => ShowWindow());
+        _openMenu.Click += (_, _) => ShowWindow();
+        menu.Items.Add(_openMenu);
         menu.Items.Add(_themesMenu);
         menu.Items.Add(_pauseMenu);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Выход", null, (_, _) => ExitApp());
+        _exitMenu.Click += (_, _) => ExitApp();
+        menu.Items.Add(_exitMenu);
+        ApplyLanguage();
         _pauseMenu.Click += (_, _) => SetPaused(!_engine.Paused);
         _tray.ContextMenuStrip = menu;
         _tray.DoubleClick += (_, _) => ShowWindow();
@@ -77,8 +83,8 @@ sealed class MainForm : Form
 
         _engine.Status += s => UI(() =>
         {
-            _status = s;
-            _tray.Text = s.Length > 63 ? s[..63] : s;
+            _status = _engine.CurrentStatus?.ToString() ?? s;
+            _tray.Text = _status.Length > 63 ? _status[..63] : _status;
             PostStatus();
         });
         _engine.FrameRendered += OnFrame;
@@ -125,7 +131,7 @@ sealed class MainForm : Form
         var link = new LinkLabel
         {
             Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.White, LinkColor = Color.DeepSkyBlue,
-            Text = $"Для окна настроек нужен Microsoft Edge WebView2 Runtime.\nСкачать: https://go.microsoft.com/fwlink/p/?LinkId=2124703\n\n{ex.Message}",
+            Text = L.Get("Microsoft Edge WebView2 Runtime is required for settings.\nDownload: {0}\n\n{1}", "https://go.microsoft.com/fwlink/p/?LinkId=2124703", ex.Message),
         };
         link.LinkArea = new LinkArea(link.Text.IndexOf("https", StringComparison.Ordinal), "https://go.microsoft.com/fwlink/p/?LinkId=2124703".Length);
         link.LinkClicked += (_, _) => OpenUrl("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
@@ -206,6 +212,13 @@ sealed class MainForm : Form
     {
         switch (key)
         {
+            case "language":
+                _settings.Language = (string?)value ?? "en";
+                L.Language = _settings.Language;
+                ApplyLanguage();
+                _status = _engine.CurrentStatus?.ToString() ?? "";
+                PostStatus();
+                break;
             case "theme":
                 ApplyTheme((string)value!, chosen: true);
                 break;
@@ -253,7 +266,7 @@ sealed class MainForm : Form
                 return;
             case "autostart":
                 try { Autostart.Set((bool)value!); }
-                catch (Exception e) { Post(new { type = "toast", kind = "error", text = "Автозапуск: " + e.Message }); }
+                catch (Exception e) { Post(new { type = "toast", kind = "error", text = L.Get("Autostart: {0}", e.Message) }); }
                 break;
         }
         _settings.Save();
@@ -265,6 +278,7 @@ sealed class MainForm : Form
         Post(new
         {
             type = "state",
+            language = _settings.Language,
             themes = _themes.Select(n => new { name = n, title = n, thumb = _thumbs.GetValueOrDefault(n) }),
             customThumb = _thumbs.GetValueOrDefault(CustomLayout.ThemeName),
             gallery = GalleryItems(),
@@ -287,15 +301,22 @@ sealed class MainForm : Form
         });
     }
 
-    private void PostStatus() => Post(new
+    private void PostStatus()
     {
-        type = "status",
-        text = _status,
-        connected = _engine.Connected,
-        paused = _engine.Paused,
-        device = _engine.DeviceInfo,
-        traffic = _engine.FramesSent > 0 ? $"Отправлено кадров: {_engine.FramesSent}, {_engine.BytesSent / 1024.0 / 1024:0.0} МБ" : null,
-    });
+        var status = _engine.CurrentStatus;
+        Post(new
+        {
+            type = "status",
+            text = _status,
+            textKey = status?.Key,
+            textArgs = status?.Arguments,
+            connected = _engine.Connected,
+            paused = _engine.Paused,
+            device = _engine.DeviceInfo,
+            framesSent = _engine.FramesSent,
+            megabytesSent = _engine.BytesSent / 1024.0 / 1024,
+        });
+    }
 
     private static readonly string[] AliasKeys =
     [
@@ -455,7 +476,7 @@ sealed class MainForm : Form
         _themesMenu.DropDownItems.Clear();
         foreach (var n in _themes.Append(CustomLayout.ThemeName))
         {
-            var item = new ToolStripMenuItem(n == CustomLayout.ThemeName ? "Своя раскладка" : n) { Tag = n };
+            var item = new ToolStripMenuItem(n == CustomLayout.ThemeName ? L.Get("Custom layout") : n) { Tag = n };
             item.Click += (_, _) =>
             {
                 ApplyTheme((string)item.Tag!, chosen: true);
@@ -485,7 +506,7 @@ sealed class MainForm : Form
         }
         catch (Exception e)
         {
-            Post(new { type = "toast", kind = "error", text = $"Не удалось загрузить «{name}»: {e.Message}" });
+            Post(new { type = "toast", kind = "error", text = L.Get("Could not load “{0}”: {1}", name, e.Message) });
         }
     }
 
@@ -496,15 +517,15 @@ sealed class MainForm : Form
         var videos = string.Join(";", FrameSources.VideoExtensions.Select(e => "*" + e));
         using var dlg = new OpenFileDialog
         {
-            Title = "Фон экрана",
-            Filter = $"Картинки, GIF и видео|*.png;*.jpg;*.jpeg;*.bmp;*.gif;{videos}|Видео|{videos}|GIF|*.gif|Все файлы|*.*",
+            Title = L.Get("Display background"),
+            Filter = $"{L.Get("Images, GIFs and videos")}|*.png;*.jpg;*.jpeg;*.bmp;*.gif;{videos}|{L.Get("Videos")}|{videos}|GIF|*.gif|{L.Get("All files")}|*.*",
         };
         if (File.Exists(_settings.BackgroundFile)) dlg.InitialDirectory = Path.GetDirectoryName(_settings.BackgroundFile);
         if (dlg.ShowDialog(this) == DialogResult.OK)
         {
             if (FrameSources.IsVideo(dlg.FileName) && VideoSource.FindFfmpeg() == null)
             {
-                Post(new { type = "toast", kind = "error", text = "Для видео нужен ffmpeg.exe: положите его рядом с SamaLcd.exe." });
+                Post(new { type = "toast", kind = "error", text = L.Get("Video requires ffmpeg.exe next to SamaLcd.exe.") });
             }
             else
             {
@@ -521,12 +542,24 @@ sealed class MainForm : Form
     {
         if (!File.Exists(path)) return "";
         var size = new FileInfo(path).Length / 1024.0 / 1024;
-        var kind = FrameSources.IsVideo(path) ? "видео"
-            : Path.GetExtension(path).Equals(".gif", StringComparison.OrdinalIgnoreCase) ? "GIF" : "картинка";
-        return $"{kind}, {size:0.0} МБ";
+        var kind = FrameSources.IsVideo(path) ? L.Get("video")
+            : Path.GetExtension(path).Equals(".gif", StringComparison.OrdinalIgnoreCase) ? "GIF" : L.Get("image");
+        return $"{kind}, {size:0.0} MB";
     }
 
     // ---------- window and tray ----------
+
+    private void ApplyLanguage()
+    {
+        _openMenu.Text = L.Get("Open");
+        _exitMenu.Text = L.Get("Exit");
+        _themesMenu.Text = L.Get("Variant");
+        _pauseMenu.Text = L.Get("Pause");
+        foreach (ToolStripMenuItem item in _themesMenu.DropDownItems)
+            if (Equals(item.Tag, CustomLayout.ThemeName)) item.Text = L.Get("Custom layout");
+        var message = _engine.CurrentStatus?.ToString() ?? "SAMA LCD";
+        _tray.Text = message.Length > 63 ? message[..63] : message;
+    }
 
     private void SetPaused(bool paused)
     {

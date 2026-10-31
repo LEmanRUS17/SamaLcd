@@ -1,3 +1,5 @@
+using L = SamaLcd.Core.Localization.Localizer;
+using SamaLcd.Core.Localization;
 using System.Drawing;
 using SamaLcd.Core.Device;
 using SamaLcd.Core.Rendering;
@@ -31,6 +33,15 @@ public sealed class DisplayEngine : IDisposable
     private volatile int _pendingBrightness = -1;
     private long _lastSensorUpdate;
     private long _lastStatusQuery;
+
+    private LocalizedMessage? _currentStatus;
+    public LocalizedMessage? CurrentStatus => Volatile.Read(ref _currentStatus);
+    private void ReportStatus(string key, params object[] args)
+    {
+        var message = new LocalizedMessage(key, args);
+        Volatile.Write(ref _currentStatus, message);
+        Status?.Invoke(message.ToString());
+    }
 
     public event Action<string>? Status;
     public event Action<string>? Log;
@@ -178,7 +189,7 @@ public sealed class DisplayEngine : IDisposable
             catch (Exception e)
             {
                 Log?.Invoke($"Error: {e.Message}");
-                Status?.Invoke($"Ошибка экрана: {e.Message}");
+                ReportStatus("Screen error: {0}", e.Message);
                 Disconnect();
                 interval = 3000;
             }
@@ -205,7 +216,7 @@ public sealed class DisplayEngine : IDisposable
             if (_renderer.BackgroundError is { } err && err != _reportedBackgroundError)
             {
                 _reportedBackgroundError = err;
-                Status?.Invoke($"Фон: {err}");
+                ReportStatus("Background: {0}", err);
             }
         }
 
@@ -278,8 +289,8 @@ public sealed class DisplayEngine : IDisposable
         PreparedVideo prepared;
         try
         {
-            Status?.Invoke($"Подготовка видео {Path.GetFileName(wanted.Source)}...");
-            prepared = DeviceVideo.Prepare(wanted.Source, wanted.Fit, wanted.Rotation, _settings.Width, _settings.Height, s => Status?.Invoke(s));
+            ReportStatus("Preparing video {0}…", Path.GetFileName(wanted.Source));
+            prepared = DeviceVideo.Prepare(wanted.Source, wanted.Fit, wanted.Rotation, _settings.Width, _settings.Height, s => ReportStatus("{0}", s));
         }
         catch (Exception e)
         {
@@ -294,7 +305,7 @@ public sealed class DisplayEngine : IDisposable
         }
         catch (Exception e) when (++_videoFailures < 2)
         {
-            throw new IOException($"Видео: {e.Message}", e); // reconnect and try once more
+            throw new IOException(L.Get("Video: {0}", e.Message), e); // reconnect and try once more
         }
         catch (Exception e)
         {
@@ -303,13 +314,13 @@ public sealed class DisplayEngine : IDisposable
         }
         _videoFailures = 0;
         _activeVideo = wanted;
-        Status?.Invoke($"Видео играет на экране: {Path.GetFileName(wanted.Source)}");
+        ReportStatus("Playing video on display: {0}", Path.GetFileName(wanted.Source));
     }
 
     /// <summary>Shows the video by sending its frames instead (slow, ~4 fps) when the panel cannot play it.</summary>
     private void FallBackToStreaming(VideoRequest wanted, Exception e)
     {
-        Status?.Invoke($"Видео на экране не запустилось ({e.Message}), показываю потоком");
+        ReportStatus("Device playback failed ({0}); streaming instead", e.Message);
         Log?.Invoke($"Device video failed: {e}");
         _videoFailures = 0;
         _streamingFallback = wanted.Source;
@@ -343,11 +354,11 @@ public sealed class DisplayEngine : IDisposable
                 int pct = (int)(p * 100);
                 if (pct / 5 == lastPct / 5) return;
                 lastPct = pct;
-                Status?.Invoke($"Загрузка видео на экран: {pct}%");
+                ReportStatus("Uploading video to display: {0}%", pct);
             });
             return dir + video.RemoteName;
         }
-        throw new IOException($"На экране нет места для видео ({video.Size / 1024 / 1024.0:0.0} МБ)");
+        throw new IOException(L.Get("Not enough space on display for video ({0:0.0} MB)", video.Size / 1024 / 1024.0));
     }
 
     /// <summary>
@@ -368,7 +379,7 @@ public sealed class DisplayEngine : IDisposable
     private void EnsureConnected()
     {
         if (_device != null) return;
-        Status?.Invoke("Поиск экрана...");
+        ReportStatus("Searching for display…");
         var port = string.IsNullOrWhiteSpace(_settings.Port) ? null : _settings.Port;
         _device = LcdDevice.Connect(port, _settings.Width, _settings.Height, s => Log?.Invoke(s));
         _device.FullFrameDelayMs = _settings.FullFrameDelayMs;
@@ -377,7 +388,7 @@ public sealed class DisplayEngine : IDisposable
         _pendingBrightness = -1;
         _needFull = true;
         _lastFrame = null;
-        Status?.Invoke($"Подключено: {DeviceInfo}");
+        ReportStatus("Connected: {0}", DeviceInfo ?? "");
     }
 
     private void Disconnect()

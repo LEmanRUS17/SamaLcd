@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Localization\*.json" LogicalName="SamaLcd.Localization.%(Filename).json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.14" />
     <PackageReference Include="System.IO.Ports" Version="10.0.14" />

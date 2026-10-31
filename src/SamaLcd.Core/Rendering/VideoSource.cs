@@ -1,3 +1,4 @@
+using L = SamaLcd.Core.Localization.Localizer;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -57,8 +58,8 @@ public sealed class VideoSource : IFrameSource
 
     public VideoSource(string path, int width, int height, ImageFit fit, int fps)
     {
-        if (!File.Exists(path)) throw new FileNotFoundException("Video not found", path);
-        var ffmpeg = FindFfmpeg() ?? throw new FileNotFoundException("ffmpeg.exe not found: put it next to SamaLcd.exe");
+        if (!File.Exists(path)) throw new FileNotFoundException(L.Get("Video not found"), path);
+        var ffmpeg = FindFfmpeg() ?? throw new FileNotFoundException(L.Get("Video requires ffmpeg.exe next to SamaLcd.exe."));
         _width = width;
         _height = height;
         fps = Math.Clamp(fps, 1, 60);

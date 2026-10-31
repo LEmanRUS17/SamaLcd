@@ -63,7 +63,7 @@ public sealed class CustomLayout
     {
         var theme = new Theme
         {
-            Name = "Своя раскладка",
+            Name = Localization.Localizer.Get("Custom layout"),
             IntervalMs = 1000,
             Directory = Path.GetDirectoryName(FilePath)!,
             Background = new Background { Color = Background },

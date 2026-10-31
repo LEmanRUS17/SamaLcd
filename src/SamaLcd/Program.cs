@@ -1,3 +1,4 @@
+using L = SamaLcd.Core.Localization.Localizer;
 using SamaLcd.Core;
 using SamaLcd.Core.Sensors;
 
@@ -8,15 +9,16 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
+        var settings = AppSettings.Load();
+        L.Language = settings.Language;
         using var mutex = new Mutex(true, @"Local\SamaLcd.SingleInstance", out bool first);
         if (!first)
         {
-            MessageBox.Show("SAMA LCD is already running (see the tray icon).", "SAMA LCD");
+            MessageBox.Show(L.Get("SAMA LCD is already running (see the tray icon)."), "SAMA LCD");
             return;
         }
 
         ApplicationConfiguration.Initialize();
-        var settings = AppSettings.Load();
         bool minimized = (args.Contains("--minimized") || settings.StartMinimized && args.Contains("--autostart")) && !args.Contains("--screenshot");
 
         using var sensors = SensorHub.CreateDefault();

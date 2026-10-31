@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,15 +16,14 @@
     <div class="logo"></div>
     <div class="leading-tight">
       <div class="font-bold text-lg">SAMA LCD</div>
-      <div class="text-xs opacity-60">экран водяного охлаждения</div>
+      <div class="text-xs opacity-60"><span data-i18n="Water cooling display">Water cooling display</span></div>
     </div>
-    <div id="conn" class="badge badge-soft badge-warning gap-1 ml-2 whitespace-nowrap"><span class="status status-warning"></span> поиск экрана</div>
+    <div id="conn" class="badge badge-soft badge-warning gap-1 ml-2 whitespace-nowrap"><span class="status status-warning"></span> <span data-i18n="Searching for display">Searching for display</span></div>
     <div id="status" class="text-sm opacity-60 truncate"></div>
   </div>
   <label class="label text-sm gap-2 cursor-pointer">
-    <input id="paused" type="checkbox" class="toggle toggle-sm toggle-warning"> Пауза
-  </label>
-  <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm" title="Светлая / тёмная тема окна">
+    <input id="paused" type="checkbox" class="toggle toggle-sm toggle-warning"> <span data-i18n="Pause">Pause</span> </label>
+  <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm" title="Light / dark window theme" data-i18n-title="Light / dark window theme">
     <input id="uiTheme" type="checkbox">
     <svg class="swap-off size-5 fill-current" viewBox="0 0 24 24"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8 8 0 0 1-3.37.73A8.15 8.15 0 0 1 9.08 5.49a8.6 8.6 0 0 1 .25-2A1 1 0 0 0 8 2.36 10.14 10.14 0 1 0 22 14.05a1 1 0 0 0-.36-1.05Z"/></svg>
     <svg class="swap-on size-5 fill-current" viewBox="0 0 24 24"><path d="M5.64 17l-.71.71a1 1 0 0 0 1.41 1.41l.71-.71A1 1 0 0 0 5.64 17ZM5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm7-7a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1ZM5.64 7.05a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1 1 0 0 0-1.41 1.41ZM17 8a1 1 0 0 0 .71-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.71.71A1 1 0 0 0 17 8Zm4 3h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-9 8a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Zm6.36-2A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Z"/></svg>
@@ -37,17 +36,17 @@
   <aside class="card bg-base-100 shadow-sm w-full lg:w-[380px] shrink-0 lg:sticky lg:top-[80px]">
     <div class="card-body items-center gap-4">
       <div class="flex w-full items-center justify-between">
-        <h2 class="card-title text-base">Сейчас на экране</h2>
+        <h2 class="card-title text-base"><span data-i18n="On the display">On the display</span></h2>
         <span id="variantBadge" class="badge badge-primary badge-soft"></span>
       </div>
       <div class="preview-ring">
         <div class="media-layer" id="previewMedia"></div>
         <img id="preview" class="preview" alt="">
-        <div id="previewEmpty" class="preview-empty">загрузка…</div>
+        <div id="previewEmpty" class="preview-empty"><span data-i18n="Loading…">Loading…</span></div>
       </div>
       <div class="w-full">
         <div class="flex justify-between text-sm mb-1">
-          <span class="opacity-70">Яркость</span><span id="brightnessValue" class="font-mono">80 %</span>
+          <span class="opacity-70"><span data-i18n="Brightness">Brightness</span></span><span id="brightnessValue" class="font-mono">80 %</span>
         </div>
         <input id="brightness" type="range" min="0" max="100" value="80" class="range range-primary range-sm w-full">
       </div>
@@ -58,10 +57,10 @@
   <!-- Settings -->
   <main class="flex-1 min-w-0 w-full">
     <div role="tablist" class="tabs tabs-box bg-base-100 shadow-sm mb-4 w-fit" id="tabs">
-      <button role="tab" class="tab" data-tab="image">🖼️&nbsp; Изображение</button>
-      <button role="tab" class="tab" data-tab="data">📊&nbsp; Данные</button>
-      <button role="tab" class="tab" data-tab="sensors">🌡️&nbsp; Датчики</button>
-      <button role="tab" class="tab" data-tab="app">⚙️&nbsp; Программа</button>
+      <button role="tab" class="tab" data-tab="image"><span data-i18n="🖼️ Image">🖼️ Image</span></button>
+      <button role="tab" class="tab" data-tab="data"><span data-i18n="📊 Data">📊 Data</span></button>
+      <button role="tab" class="tab" data-tab="sensors"><span data-i18n="🌡️ Sensors">🌡️ Sensors</span></button>
+      <button role="tab" class="tab" data-tab="app"><span data-i18n="⚙️ App">⚙️ App</span></button>
     </div>
 
     <!-- IMAGE -->
@@ -69,44 +68,43 @@
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body">
           <div class="flex flex-wrap items-center gap-3">
-            <h2 class="card-title flex-1">Фон</h2>
+            <h2 class="card-title flex-1"><span data-i18n="Background">Background</span></h2>
             <div class="join" id="bgMode">
-              <button class="btn join-item" data-value="gallery">🖼️ Галерея</button>
-              <button class="btn join-item" data-value="color">🎨 Цвет</button>
-              <button class="btn join-item" data-value="file">📂 Из источника</button>
+              <button class="btn join-item" data-value="gallery"><span data-i18n="🖼️ Gallery">🖼️ Gallery</span></button>
+              <button class="btn join-item" data-value="color"><span data-i18n="🎨 Color">🎨 Color</span></button>
+              <button class="btn join-item" data-value="file"><span data-i18n="📂 From file">📂 From file</span></button>
             </div>
           </div>
 
           <div id="bgGalleryBox" class="mt-2">
             <div class="flex flex-wrap items-center gap-2 mb-3">
-              <div class="text-sm opacity-70 flex-1">Готовые фоны из папки программы <span class="font-mono">backgrounds</span>.
-                Положите туда свои картинки, GIF или видео — они появятся здесь.</div>
-              <button id="openGallery" class="btn btn-sm btn-ghost">Папка галереи</button>
-              <button id="reloadGallery" class="btn btn-sm btn-ghost">Обновить</button>
+              <div class="text-sm opacity-70 flex-1"><span data-i18n="Built-in backgrounds from the app folder">Built-in backgrounds from the app folder</span> <span class="font-mono">backgrounds</span><span data-i18n=". Add your own images, GIFs or videos there to show them here.">. Add your own images, GIFs or videos there to show them here.</span></div>
+              <button id="openGallery" class="btn btn-sm btn-ghost"><span data-i18n="Gallery folder">Gallery folder</span></button>
+              <button id="reloadGallery" class="btn btn-sm btn-ghost"><span data-i18n="Refresh">Refresh</span></button>
             </div>
             <div id="gallery" class="flex flex-wrap gap-3"></div>
           </div>
 
           <div id="bgColorBox" class="mt-2">
-            <div class="text-sm opacity-70 mb-2">Цвет заливки</div>
+            <div class="text-sm opacity-70 mb-2"><span data-i18n="Fill color">Fill color</span></div>
             <div class="palette" id="bgPalette"></div>
           </div>
 
           <div id="bgFileBox" class="mt-2 space-y-3">
-            <div class="text-sm opacity-70">Любая картинка, GIF или видео с компьютера.</div>
+            <div class="text-sm opacity-70"><span data-i18n="Any image, GIF or video from your computer.">Any image, GIF or video from your computer.</span></div>
             <div class="flex items-center gap-3">
-              <button id="pickFile" class="btn btn-primary btn-soft">Выбрать файл…</button>
+              <button id="pickFile" class="btn btn-primary btn-soft"><span data-i18n="Choose file…">Choose file…</span></button>
               <div class="min-w-0">
-                <div id="bgFileName" class="font-medium truncate">файл не выбран</div>
+                <div id="bgFileName" class="font-medium truncate"><span data-i18n="No file selected">No file selected</span></div>
                 <div id="bgFileKind" class="text-xs opacity-60"></div>
               </div>
             </div>
             <fieldset class="fieldset">
-              <legend class="fieldset-legend">Масштаб</legend>
+              <legend class="fieldset-legend"><span data-i18n="Scaling">Scaling</span></legend>
               <div class="join" id="fit">
-                <button class="btn btn-sm join-item" data-value="cover">Заполнить</button>
-                <button class="btn btn-sm join-item" data-value="contain">Вписать</button>
-                <button class="btn btn-sm join-item" data-value="stretch">Растянуть</button>
+                <button class="btn btn-sm join-item" data-value="cover"><span data-i18n="Fill">Fill</span></button>
+                <button class="btn btn-sm join-item" data-value="contain"><span data-i18n="Fit">Fit</span></button>
+                <button class="btn btn-sm join-item" data-value="stretch"><span data-i18n="Stretch">Stretch</span></button>
               </div>
             </fieldset>
           </div>
@@ -115,9 +113,9 @@
 
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body">
-          <h2 class="card-title">Экран</h2>
+          <h2 class="card-title"><span data-i18n="Display">Display</span></h2>
           <fieldset class="fieldset">
-            <legend class="fieldset-legend">Поворот изображения</legend>
+            <legend class="fieldset-legend"><span data-i18n="Image rotation">Image rotation</span></legend>
             <div class="join" id="rotation">
               <button class="btn join-item" data-value="0">0°</button>
               <button class="btn join-item" data-value="90">90°</button>
@@ -128,8 +126,8 @@
           <label class="label cursor-pointer gap-3 items-start mt-3">
             <input id="onDevice" type="checkbox" class="toggle toggle-primary mt-0.5">
             <span class="whitespace-normal">
-              <span class="text-base-content">Видео и GIF играет сам экран</span><br>
-              <span class="text-xs opacity-60">файл загружается на SD-карту экрана и идёт плавно; без этого — около 4 кадров/с по USB</span>
+              <span class="text-base-content"><span data-i18n="Play videos and GIFs on the display">Play videos and GIFs on the display</span></span><br>
+              <span class="text-xs opacity-60"><span data-i18n="Uploads the file to the display’s SD card for smooth playback; USB streaming runs at about 4 fps.">Uploads the file to the display’s SD card for smooth playback; USB streaming runs at about 4 fps.</span></span>
             </span>
           </label>
         </div>
@@ -141,13 +139,13 @@
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body">
           <div class="flex flex-wrap items-center gap-2">
-            <h2 class="card-title flex-1">Вариант отображения</h2>
-            <button id="openThemes" class="btn btn-sm btn-ghost">Папка тем</button>
-            <button id="reloadThemes" class="btn btn-sm btn-ghost">Обновить</button>
+            <h2 class="card-title flex-1"><span data-i18n="Display layout">Display layout</span></h2>
+            <button id="openThemes" class="btn btn-sm btn-ghost"><span data-i18n="Themes folder">Themes folder</span></button>
+            <button id="reloadThemes" class="btn btn-sm btn-ghost"><span data-i18n="Refresh">Refresh</span></button>
           </div>
           <div id="variants" class="flex flex-wrap gap-3"></div>
           <div id="cpuHintData" role="alert" class="alert alert-warning alert-soft mt-2 hidden">
-            <span>Температура и частота CPU недоступны — нужен драйвер PawnIO. Подробнее на вкладке «Датчики».</span>
+            <span><span data-i18n="CPU temperature and clock are unavailable. Install PawnIO; see the Sensors tab.">CPU temperature and clock are unavailable. Install PawnIO; see the Sensors tab.</span></span>
           </div>
         </div>
       </div>
@@ -155,21 +153,21 @@
       <div id="editor" class="card bg-base-100 shadow-sm hidden">
         <div class="card-body">
           <div class="flex flex-wrap items-center gap-2">
-            <h2 class="card-title flex-1">Своя раскладка</h2>
-            <span class="text-sm opacity-70">Сетка</span>
+            <h2 class="card-title flex-1"><span data-i18n="Custom layout">Custom layout</span></h2>
+            <span class="text-sm opacity-70"><span data-i18n="Grid">Grid</span></span>
             <select id="gridSize" class="select select-sm w-24">
               <option value="4">4×4</option><option value="6">6×6</option><option value="8">8×8</option>
               <option value="10">10×10</option><option value="12">12×12</option><option value="16">16×16</option>
             </select>
-            <button id="resetLayout" class="btn btn-sm btn-ghost">Сбросить</button>
+            <button id="resetLayout" class="btn btn-sm btn-ghost"><span data-i18n="Reset">Reset</span></button>
           </div>
           <div class="flex flex-wrap gap-2">
-            <span class="text-sm opacity-70 self-center mr-1">Добавить:</span>
-            <button class="btn btn-sm btn-primary btn-soft" data-add="sensor">＋ Значение</button>
-            <button class="btn btn-sm btn-primary btn-soft" data-add="bar">＋ Шкала</button>
-            <button class="btn btn-sm btn-primary btn-soft" data-add="text">＋ Надпись</button>
-            <button class="btn btn-sm btn-primary btn-soft" data-add="time">＋ Время</button>
-            <button class="btn btn-sm btn-primary btn-soft" data-add="date">＋ Дата</button>
+            <span class="text-sm opacity-70 self-center mr-1"><span data-i18n="Add:">Add:</span></span>
+            <button class="btn btn-sm btn-primary btn-soft" data-add="sensor"><span data-i18n="＋ Value">＋ Value</span></button>
+            <button class="btn btn-sm btn-primary btn-soft" data-add="bar"><span data-i18n="＋ Bar">＋ Bar</span></button>
+            <button class="btn btn-sm btn-primary btn-soft" data-add="text"><span data-i18n="＋ Text">＋ Text</span></button>
+            <button class="btn btn-sm btn-primary btn-soft" data-add="time"><span data-i18n="＋ Time">＋ Time</span></button>
+            <button class="btn btn-sm btn-primary btn-soft" data-add="date"><span data-i18n="＋ Date">＋ Date</span></button>
           </div>
 
           <div class="flex flex-wrap 2xl:flex-nowrap gap-6 mt-2 items-start">
@@ -180,7 +178,7 @@
                 <div id="gridLines" class="grid-lines"></div>
                 <div id="items"></div>
               </div>
-              <div class="text-xs opacity-60 mt-2 max-w-[440px]">Перетаскивайте элементы мышью, угол справа внизу меняет размер. Всё за пределами круга экран не покажет.</div>
+              <div class="text-xs opacity-60 mt-2 max-w-[440px]"><span data-i18n="Drag items to move them; drag the bottom-right corner to resize. Anything outside the circle is not visible on the display.">Drag items to move them; drag the bottom-right corner to resize. Anything outside the circle is not visible on the display.</span></div>
             </div>
             <div id="props" class="flex-1 min-w-[300px]"></div>
           </div>
@@ -193,24 +191,24 @@
       <div id="cpuHint" role="alert" class="alert alert-warning alert-soft hidden">
         <svg class="size-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
         <div>
-          <div class="font-bold">Температура, частота и мощность CPU недоступны</div>
-          <div class="text-sm">Нужен драйвер PawnIO и запуск от администратора. После установки перезапустите программу.</div>
+          <div class="font-bold"><span data-i18n="CPU temperature, clock and power are unavailable">CPU temperature, clock and power are unavailable</span></div>
+          <div class="text-sm"><span data-i18n="Install the PawnIO driver and run as administrator. Restart the app after installation.">Install the PawnIO driver and run as administrator. Restart the app after installation.</span></div>
         </div>
         <button class="btn btn-sm" data-url="https://pawnio.eu">pawnio.eu</button>
       </div>
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body">
           <div class="flex flex-wrap items-center gap-3">
-            <h2 class="card-title flex-1">Все датчики</h2>
+            <h2 class="card-title flex-1"><span data-i18n="All sensors">All sensors</span></h2>
             <label class="input input-sm w-72">
               <svg class="h-4 opacity-50" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></g></svg>
-              <input id="sensorFilter" type="search" placeholder="Поиск: temp, gpu, fan…">
+              <input id="sensorFilter" type="search" placeholder="Search: temp, gpu, fan…" data-i18n-placeholder="Search: temp, gpu, fan…">
             </label>
           </div>
-          <div class="text-sm opacity-70">Ключ можно вставить в надпись своей раскладки или в тему: <kbd class="kbd kbd-sm">{ключ:0.0}</kbd></div>
+          <div class="text-sm opacity-70"><span data-i18n="Use a key in your custom text or theme:">Use a key in your custom text or theme:</span> <kbd class="kbd kbd-sm"><span data-i18n="{key:0.0}">{key:0.0}</span></kbd></div>
           <div class="overflow-x-auto max-h-[60vh] mt-2">
             <table class="table table-sm table-pin-rows">
-              <thead><tr><th>Ключ</th><th class="text-right">Значение</th><th>Тип</th><th>Устройство</th><th>Название</th></tr></thead>
+              <thead><tr><th><span data-i18n="Key">Key</span></th><th class="text-right"><span data-i18n="Value">Value</span></th><th><span data-i18n="Type">Type</span></th><th><span data-i18n="Device">Device</span></th><th><span data-i18n="Name">Name</span></th></tr></thead>
               <tbody id="sensorRows" class="select-text"></tbody>
             </table>
           </div>
@@ -222,17 +220,28 @@
     <section data-page="app" class="page grid xl:grid-cols-2 gap-4">
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body">
-          <h2 class="card-title">Запуск</h2>
+          <label class="card-title" for="language" data-i18n="Language">Language</label>
+          <select id="language" class="select w-full max-w-xs">
+            <option value="en">English</option><option value="zh-Hans">简体中文</option>
+            <option value="ja">日本語</option><option value="ru">Русский</option>
+          </select>
+          <p class="text-xs opacity-60" data-i18n="Changes apply immediately and are saved for the next launch.">Changes apply immediately and are saved for the next launch.</p>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title"><span data-i18n="Startup">Startup</span></h2>
           <label class="label cursor-pointer gap-3">
             <input id="autostart" type="checkbox" class="toggle toggle-primary">
-            <span class="text-base-content">Запускать вместе с Windows</span>
+            <span class="text-base-content"><span data-i18n="Start with Windows">Start with Windows</span></span>
           </label>
-          <div class="text-xs opacity-60">При автозапуске окно не открывается — программа работает в трее. Закрытие окна тоже сворачивает её в трей, выход — через меню значка.</div>
+          <div class="text-xs opacity-60"><span data-i18n="Autostart runs in the tray without opening a window. Closing the window also minimizes to the tray; use the tray menu to exit.">Autostart runs in the tray without opening a window. Closing the window also minimizes to the tray; use the tray menu to exit.</span></div>
         </div>
       </div>
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body">
-          <h2 class="card-title">Экран</h2>
+          <h2 class="card-title"><span data-i18n="Display">Display</span></h2>
           <div id="deviceInfo" class="text-sm font-mono opacity-80">—</div>
           <div id="traffic" class="text-sm opacity-60"></div>
         </div>
@@ -243,6 +252,8 @@
 
 <div class="toast toast-end" id="toasts"></div>
 
+<script src="locales.js"></script>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
