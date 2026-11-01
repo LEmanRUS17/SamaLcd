@@ -54,6 +54,23 @@ public sealed class DisplayEngine : IDisposable
     /// <summary>Frames sent to the panel and their encoded size since start (for diagnostics).</summary>
     public long FramesSent { get; private set; }
     public long BytesSent { get; private set; }
+    public long[] Storage { get; private set; } = [];
+
+    private long VideoBudget()
+    {
+        Storage = _device!.StorageInfo();
+        if(Storage.Length != 6) throw new IOException("Invalid storage reply");
+        long best = 0;
+        foreach(var (folder,index) in new[]{("/mnt/SDCARD/video/",5),("/root/video/",2)})
+        {
+            long available=Storage[index]*1024;
+            // Only our own generated files may be reclaimed. Leave vendor/user files untouched.
+            foreach(var file in _device.ListDir(folder).Where(f=>f.StartsWith(DeviceVideo.RemotePrefix,StringComparison.Ordinal)))
+                available += _device.FileSize(folder+file);
+            best=Math.Max(best,available);
+        }
+        return Math.Max(0,best-512*1024);
+    }
 
     public DisplayEngine(AppSettings settings, SensorHub sensors)
     {
@@ -290,7 +307,10 @@ public sealed class DisplayEngine : IDisposable
         try
         {
             ReportStatus("Preparing video {0}…", Path.GetFileName(wanted.Source));
-            prepared = DeviceVideo.Prepare(wanted.Source, wanted.Fit, wanted.Rotation, _settings.Width, _settings.Height, s => ReportStatus("{0}", s), wanted.Crop);
+            var budget=VideoBudget();
+            if(budget<=0) throw new IOException(L.Get("Video is too long for the available storage. Choose a shorter clip or free space."));
+            ReportStatus("Compressing for display storage: at most {0:0.0} MiB",budget/1048576.0);
+            prepared = DeviceVideo.Prepare(wanted.Source, wanted.Fit, wanted.Rotation, _settings.Width, _settings.Height, s => ReportStatus("{0}", s), wanted.Crop,budget);
         }
         catch (Exception e)
         {
@@ -302,6 +322,7 @@ public sealed class DisplayEngine : IDisposable
         {
             var remote = EnsureUploaded(prepared);
             _device!.PlayVideo(remote);
+            Storage = _device.StorageInfo();
         }
         catch (Exception e) when (++_videoFailures < 2)
         {
@@ -384,6 +405,7 @@ public sealed class DisplayEngine : IDisposable
         _device = LcdDevice.Connect(port, _settings.Width, _settings.Height, s => Log?.Invoke(s));
         _device.FullFrameDelayMs = _settings.FullFrameDelayMs;
         _device.StopPlayback();
+        Storage = _device.StorageInfo();
         _device.SetBrightness(_settings.Brightness, _settings.BrightnessScale);
         _pendingBrightness = -1;
         _needFull = true;

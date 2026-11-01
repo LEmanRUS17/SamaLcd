@@ -170,5 +170,10 @@
   "Checking FFmpeg…": "正在检查 FFmpeg…",
   "Downloading FFmpeg…": "正在下载 FFmpeg…",
   "FFmpeg ready": "FFmpeg 已就绪",
-  "FFmpeg setup failed: {0}": "FFmpeg 安装失败：{0}"
+  "FFmpeg setup failed: {0}": "FFmpeg 安装失败：{0}",
+  "Video is too long for the available storage. Choose a shorter clip or free space.": "视频过长，无法在可用空间内保证画质。请选择较短片段或释放空间。",
+  "Cannot determine video duration.": "无法读取视频时长。",
+  "Compressed video still exceeds the storage limit. Choose a shorter clip.": "压缩后的视频仍超过存储上限，请选择较短片段。",
+  "Compressing for display storage: at most {0:0.0} MiB": "正在按屏幕空间压缩：上限 {0:0.0} MiB",
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内置可用：{0} / {1} MiB；SD 可用：{2} / {3} MiB"
 }

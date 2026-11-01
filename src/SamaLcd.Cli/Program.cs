@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using SamaLcd.Core;
 using SamaLcd.Core.Device;
 using SamaLcd.Core.Rendering;
@@ -17,6 +17,15 @@ try
 {
     switch (cmd)
     {
+        case "fit-video":
+        {
+            var s=AppSettings.Load();
+            long budget=long.Parse(rest[1],System.Globalization.CultureInfo.InvariantCulture);
+            var prepared=DeviceVideo.Prepare(rest[0],s.BackgroundFit,s.Rotation,480,480,Log,s.BackgroundCrop,budget);
+            File.Copy(prepared.LocalPath,rest[2],true);
+            Console.WriteLine($"Prepared 480x480 H.264 video: {prepared.Size} bytes (budget {budget})");
+            break;
+        }
         case "ports":
             foreach (var p in PortLocator.ListPorts())
             {
@@ -133,7 +142,7 @@ try
             {
                 var dir = rest.Length > 0 ? rest[0] : "/root/video/";
                 foreach (var f in dev.ListDir(dir)) Console.WriteLine($"{f,-40} {dev.FileSize(dir + f)}");
-                Console.WriteLine($"Storage (MB): {string.Join(" / ", dev.StorageInfo())}");
+                Console.WriteLine($"Storage (KiB): {string.Join(" / ", dev.StorageInfo())}");
             }
             break;
 

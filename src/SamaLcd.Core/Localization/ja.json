@@ -170,5 +170,10 @@
   "Checking FFmpeg…": "FFmpegを確認中…",
   "Downloading FFmpeg…": "FFmpegをダウンロード中…",
   "FFmpeg ready": "FFmpegの準備完了",
-  "FFmpeg setup failed: {0}": "FFmpegのセットアップに失敗しました：{0}"
+  "FFmpeg setup failed: {0}": "FFmpegのセットアップに失敗しました：{0}",
+  "Video is too long for the available storage. Choose a shorter clip or free space.": "空き容量に対して動画が長すぎます。短い動画を選ぶか空き容量を増やしてください。",
+  "Cannot determine video duration.": "動画の長さを取得できません。",
+  "Compressed video still exceeds the storage limit. Choose a shorter clip.": "圧縮後の動画も容量制限を超えています。短い動画を選んでください。",
+  "Compressing for display storage: at most {0:0.0} MiB": "画面の空き容量に合わせて圧縮中：上限 {0:0.0} MiB",
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内蔵空き：{0} / {1} MiB、SD空き：{2} / {3} MiB"
 }

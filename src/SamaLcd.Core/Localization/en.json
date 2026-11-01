@@ -170,5 +170,10 @@
   "Checking FFmpeg…": "Checking FFmpeg…",
   "Downloading FFmpeg…": "Downloading FFmpeg…",
   "FFmpeg ready": "FFmpeg ready",
-  "FFmpeg setup failed: {0}": "FFmpeg setup failed: {0}"
+  "FFmpeg setup failed: {0}": "FFmpeg setup failed: {0}",
+  "Video is too long for the available storage. Choose a shorter clip or free space.": "Video is too long for the available storage. Choose a shorter clip or free space.",
+  "Cannot determine video duration.": "Cannot determine video duration.",
+  "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Compressed video still exceeds the storage limit. Choose a shorter clip.",
+  "Compressing for display storage: at most {0:0.0} MiB": "Compressing for display storage: at most {0:0.0} MiB",
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free"
 }

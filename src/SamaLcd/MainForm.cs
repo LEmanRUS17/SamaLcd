@@ -333,6 +333,7 @@ sealed class MainForm : Form
             device = _engine.DeviceInfo,
             framesSent = _engine.FramesSent,
             megabytesSent = _engine.BytesSent / 1024.0 / 1024,
+        storage = _engine.Storage,
         });
     }
 

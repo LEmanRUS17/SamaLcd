@@ -172,7 +172,12 @@ globalThis.SamaLcdCatalogs = {
     "Checking FFmpeg…": "Checking FFmpeg…",
     "Downloading FFmpeg…": "Downloading FFmpeg…",
     "FFmpeg ready": "FFmpeg ready",
-    "FFmpeg setup failed: {0}": "FFmpeg setup failed: {0}"
+    "FFmpeg setup failed: {0}": "FFmpeg setup failed: {0}",
+    "Video is too long for the available storage. Choose a shorter clip or free space.": "Video is too long for the available storage. Choose a shorter clip or free space.",
+    "Cannot determine video duration.": "Cannot determine video duration.",
+    "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Compressed video still exceeds the storage limit. Choose a shorter clip.",
+    "Compressing for display storage: at most {0:0.0} MiB": "Compressing for display storage: at most {0:0.0} MiB",
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free"
   },
   "zh-Hans": {
     "Water cooling display": "水冷屏幕",
@@ -346,7 +351,12 @@ globalThis.SamaLcdCatalogs = {
     "Checking FFmpeg…": "正在检查 FFmpeg…",
     "Downloading FFmpeg…": "正在下载 FFmpeg…",
     "FFmpeg ready": "FFmpeg 已就绪",
-    "FFmpeg setup failed: {0}": "FFmpeg 安装失败：{0}"
+    "FFmpeg setup failed: {0}": "FFmpeg 安装失败：{0}",
+    "Video is too long for the available storage. Choose a shorter clip or free space.": "视频过长，无法在可用空间内保证画质。请选择较短片段或释放空间。",
+    "Cannot determine video duration.": "无法读取视频时长。",
+    "Compressed video still exceeds the storage limit. Choose a shorter clip.": "压缩后的视频仍超过存储上限，请选择较短片段。",
+    "Compressing for display storage: at most {0:0.0} MiB": "正在按屏幕空间压缩：上限 {0:0.0} MiB",
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内置可用：{0} / {1} MiB；SD 可用：{2} / {3} MiB"
   },
   "ja": {
     "Water cooling display": "水冷ディスプレイ",
@@ -520,7 +530,12 @@ globalThis.SamaLcdCatalogs = {
     "Checking FFmpeg…": "FFmpegを確認中…",
     "Downloading FFmpeg…": "FFmpegをダウンロード中…",
     "FFmpeg ready": "FFmpegの準備完了",
-    "FFmpeg setup failed: {0}": "FFmpegのセットアップに失敗しました：{0}"
+    "FFmpeg setup failed: {0}": "FFmpegのセットアップに失敗しました：{0}",
+    "Video is too long for the available storage. Choose a shorter clip or free space.": "空き容量に対して動画が長すぎます。短い動画を選ぶか空き容量を増やしてください。",
+    "Cannot determine video duration.": "動画の長さを取得できません。",
+    "Compressed video still exceeds the storage limit. Choose a shorter clip.": "圧縮後の動画も容量制限を超えています。短い動画を選んでください。",
+    "Compressing for display storage: at most {0:0.0} MiB": "画面の空き容量に合わせて圧縮中：上限 {0:0.0} MiB",
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内蔵空き：{0} / {1} MiB、SD空き：{2} / {3} MiB"
   },
   "ru": {
     "Water cooling display": "экран водяного охлаждения",
@@ -694,6 +709,11 @@ globalThis.SamaLcdCatalogs = {
     "Checking FFmpeg…": "Проверка FFmpeg…",
     "Downloading FFmpeg…": "Загрузка FFmpeg…",
     "FFmpeg ready": "FFmpeg готов",
-    "FFmpeg setup failed: {0}": "Ошибка установки FFmpeg: {0}"
+    "FFmpeg setup failed: {0}": "Ошибка установки FFmpeg: {0}",
+    "Video is too long for the available storage. Choose a shorter clip or free space.": "Видео слишком длинное для свободного места. Выберите короткий фрагмент или освободите место.",
+    "Cannot determine video duration.": "Не удалось определить длительность видео.",
+    "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Сжатое видео всё ещё превышает лимит. Выберите более короткий фрагмент.",
+    "Compressing for display storage: at most {0:0.0} MiB": "Сжатие под память экрана: не более {0:0.0} МиБ",
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Свободно: внутренняя {0} / {1} МиБ; SD {2} / {3} МиБ"
   }
 };

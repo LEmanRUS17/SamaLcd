@@ -170,5 +170,10 @@
   "Checking FFmpeg…": "Проверка FFmpeg…",
   "Downloading FFmpeg…": "Загрузка FFmpeg…",
   "FFmpeg ready": "FFmpeg готов",
-  "FFmpeg setup failed: {0}": "Ошибка установки FFmpeg: {0}"
+  "FFmpeg setup failed: {0}": "Ошибка установки FFmpeg: {0}",
+  "Video is too long for the available storage. Choose a shorter clip or free space.": "Видео слишком длинное для свободного места. Выберите короткий фрагмент или освободите место.",
+  "Cannot determine video duration.": "Не удалось определить длительность видео.",
+  "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Сжатое видео всё ещё превышает лимит. Выберите более короткий фрагмент.",
+  "Compressing for display storage: at most {0:0.0} MiB": "Сжатие под память экрана: не более {0:0.0} МиБ",
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Свободно: внутренняя {0} / {1} МиБ; SD {2} / {3} МиБ"
 }

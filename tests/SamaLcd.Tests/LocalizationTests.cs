@@ -58,7 +58,7 @@ public class LocalizationTests
                     .Select(m => m.Value).Order().ToArray();
                 Assert.Equal(Arguments(english[key]), Arguments(text));
                 if (Arguments(text).Length > 0)
-                    Assert.NotEmpty(Localizer.Translate(language, key, 123, 45.6));
+                    Assert.NotEmpty(Localizer.Translate(language, key, 123, 45.6, 78, 90));
             }
         }
     }

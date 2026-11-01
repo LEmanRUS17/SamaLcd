@@ -148,6 +148,7 @@ $('#variants').addEventListener('click', e => {
 
 let lastStatus = null;
 function renderStatus(m) {
+  if (m.storage?.length === 6) $('#storageInfo').textContent = tr('Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free', ...( [2,0,5,3].map(i => (m.storage[i]/1024).toFixed(1)) ));
   $('#status').textContent = m.textKey ? tr(m.textKey, ...(m.textArgs || [])) : m.text;
   const c = $('#conn');
   c.className = `badge badge-soft gap-1 ml-2 whitespace-nowrap ${m.paused ? 'badge-warning' : m.connected ? 'badge-success' : 'badge-error'}`;
