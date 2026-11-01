@@ -54,7 +54,7 @@ Catalog completeness, format arguments, browser/native parity, English defaults 
 
 **Видео и анимированные GIF играет сам экран** (галочка «Видео и GIF играет сам экран», включена по умолчанию),
 как в Sama: файл перекодируется (H.264, 480×480, 24 кадра/с, 2400 кбит/с, кэш в `%LOCALAPPDATA%\SamaLcd\video`),
-загружается на SD-карту экрана (`/mnt/SDCARD/video/samalcd_*.mp4`, прежние такие файлы удаляются) и играет по кругу.
+загружается на SD-карту экрана (`/mnt/SDCARD/video/samalcd_*.mp4`, удаление файлов требует подтверждения) и играет по кругу.
 Показатели темы передаются поверх видео прозрачным слоем. В окне предпросмотра под слоем показан первый кадр видео.
 Без галочки (или если экран не смог запустить файл) кадры передаются по USB: экран принимает около 2,7 МБ/с,
 поэтому видео, где меняется весь кадр, идёт примерно с 4 кадрами/с.
@@ -155,7 +155,7 @@ ram.load ram.used ram.free board.temp pump.rpm fan.rpm` или любой иде
 
 In Image, select a file or gallery background and choose **Crop / zoom…**. Drag the image and use the zoom slider or mouse wheel to exclude embedded black borders. The square selection has a circular display mask. **Apply crop** saves the selection; **Cancel** changes nothing, and **Remove crop** restores the scaling options. Choosing another file/gallery item resets its selection. Originals are never overwritten.
 
-Still images and streamed GIFs use the source rectangle in the renderer. Device-played GIF/video and streamed video apply the same rectangle through FFmpeg before resizing or rotation. Changed crops invalidate converted-video caches. A source-frame poster supports the crop dialog even for formats the browser cannot decode.
+Still images and streamed GIFs use the source rectangle in the renderer. Device-played GIF/video and streamed video apply the same rectangle through FFmpeg before resizing or rotation. Changed crops invalidate converted-video caches. Video cropping includes a seek bar and elapsed/total time: FFmpeg extracts the selected frame, including for formats the browser cannot decode. Seeking only changes the preview; the saved square crop applies to the entire video. Late preview replies cannot overwrite a newer selection.
 
 At startup the app checks for `ffmpeg.exe` next to the program. It reuses an installed copy when available; otherwise it downloads the essentials ZIP and SHA-256 from the [gyan.dev Windows builds](https://www.gyan.dev/ffmpeg/builds/) linked by [ffmpeg.org](https://ffmpeg.org/download.html), checks the checksum, and atomically installs only the executable and license. If the app directory is not writable it uses `%LOCALAPPDATA%/SamaLcd/tools`. App settings show readiness or errors and offer a retry. Download failures do not prevent still-image use.
 
@@ -163,3 +163,5 @@ At startup the app checks for `ffmpeg.exe` next to the program. It reuses an ins
 
 The app reads capacity before conversion and checks free space again after conversion. It first tries to encode for existing free space. If a useful bitrate will not fit, it encodes against total capacity instead, then asks whether to remove the displayed SD video files. No files (including older `samalcd_` files) are deleted automatically. Confirmation shows names, sizes, required space and reclaimable space; only those exact unchanged files in `/mnt/SDCARD/video/` may be removed. Other SD folders are never formatted or cleared. The app checks capacity again after deletion before upload. Cancel or Escape preserves files and pauses playback/upload instead of silently retrying cleanup or falling back to USB. Closing the app or changing the source while waiting invalidates the request. CLI sessions without a confirmation handler cannot delete files.
 Encoding remains 480×480 / 24 fps H.264 with two-pass size control, 512 KiB reserve and 10% overhead margin. It never truncates a video to force it to fit.
+
+The App tab lists names, sizes and total usage for files in the display's SD video directory, `/mnt/SDCARD/video/`. Opening the tab or choosing **Refresh** reads the current list and capacity. **Clear videos…** opens a confirmation with the exact snapshot; Cancel/Escape keeps the files. Only explicit confirmation deletes the listed unchanged files. New files, other SD directories and internal storage are left alone. A changed list or reconnected device invalidates the confirmation. Clearing pauses playback to prevent automatic re-upload; capacity and the list are refreshed afterward. Card operations run between transfers on the display thread.

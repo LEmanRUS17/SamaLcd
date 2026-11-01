@@ -55,6 +55,76 @@ public sealed class DisplayEngine : IDisposable
     public long FramesSent { get; private set; }
     public long BytesSent { get; private set; }
     public long[] Storage { get; private set; } = [];
+    public SdCardState SdCard { get; private set; } = new("", null, false, null);
+    public event Action? SdCardChanged;
+    private sealed record SdOperation(bool Clear, string Revision, SdVideoFile[] Files);
+    private SdOperation? _sdOperation;
+
+    public void RefreshSdFiles() => QueueSdOperation(false, "");
+    public void ClearSdFiles(string revision) => QueueSdOperation(true, revision);
+
+    private void QueueSdOperation(bool clear, string revision)
+    {
+        lock (_sync)
+        {
+            if (SdCard.Busy || PendingCleanup != null) return;
+            if (clear && (revision.Length == 0 || revision != SdCard.Revision || SdCard.Files is not { Length: > 0 })) return;
+            _sdOperation = new(clear, revision, SdCard.Files?.ToArray() ?? []);
+            SdCard = SdCard with { Busy = true, Error = null };
+        }
+        SdCardChanged?.Invoke();
+        _wake.Set();
+    }
+
+    // Run all card commands on the display thread, between transfers, including while paused.
+    private void ProcessSdOperation()
+    {
+        SdOperation? operation;
+        lock (_sync) { operation = _sdOperation; _sdOperation = null; }
+        if (operation == null) return;
+        string? error = null;
+        try
+        {
+            EnsureConnected();
+            if (operation.Clear)
+            {
+                lock (_sync) if (SdCard.Revision != operation.Revision) throw new IOException(L.Get("SD files changed. Please retry and review the new file list."));
+                VideoStoragePolicy.DeleteApprovedSnapshot(true, operation.Files,
+                    name => _device!.FileSize("/mnt/SDCARD/video/" + name), name =>
+                    {
+                        if (!_running) throw new OperationCanceledException();
+                        // Keep playback paused after clearing; do not immediately upload the chosen video again.
+                        if (!Paused || _activeVideo != null) _device!.StopPlayback();
+                        Paused = true;
+                        _activeVideo = null;
+                        _preparedVideo = null;
+                        _needFull = true;
+                        _device!.TextCommand(LcdCommand.DeleteFile, "/mnt/SDCARD/video/" + name, 500);
+                    });
+                ReportStatus("SD videos cleared. Playback is paused.");
+            }
+        }
+        catch (Exception e) { error = e.Message; }
+        try { ReadSdFiles(error); }
+        catch (Exception e)
+        {
+            lock (_sync) SdCard = new("", null, false, error ?? e.Message);
+            SdCardChanged?.Invoke();
+        }
+    }
+
+    private void ReadSdFiles(string? error = null)
+    {
+        var dev = _device ?? throw new IOException(L.Get("Display not connected"));
+        var files = dev.ListDir("/mnt/SDCARD/video/")
+            .Where(n => n.Length > 0 && n is not "." and not ".." && n.IndexOfAny(['/', '\\']) < 0)
+            .Distinct(StringComparer.Ordinal).OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+            .Select(n => new SdVideoFile(n, dev.FileSize("/mnt/SDCARD/video/" + n))).Where(f => f.Size > 0).ToArray();
+        Storage = dev.StorageInfo();
+        if (Storage.Length != 6) throw new IOException("Invalid storage reply");
+        lock (_sync) SdCard = new(Guid.NewGuid().ToString("N"), files, false, error);
+        SdCardChanged?.Invoke();
+    }
     public SdCleanupRequest? PendingCleanup { get; private set; }
     public event Action<SdCleanupRequest>? CleanupRequested;
     private TaskCompletionSource<bool>? _cleanupDecision;
@@ -199,6 +269,7 @@ public sealed class DisplayEngine : IDisposable
             int interval = 1000;
             try
             {
+                ProcessSdOperation();
                 interval = Tick();
             }
             catch (Exception e)
@@ -399,6 +470,8 @@ public sealed class DisplayEngine : IDisposable
                 if (Storage[5] * 1024 < needBytes)
                 {
                     // Approval covers exactly the displayed snapshot, never newly discovered files.
+                    lock (_sync) SdCard = new("", null, SdCard.Busy, null);
+                    SdCardChanged?.Invoke();
                     dev.StopPlayback();
                     VideoStoragePolicy.DeleteApprovedSnapshot(decision.Task.Result, files, name => dev.FileSize(dirs[0] + name), name =>
                     {
@@ -421,6 +494,9 @@ public sealed class DisplayEngine : IDisposable
             lastPct = pct;
             ReportStatus("Uploading video to display: {0}%", pct);
         });
+        // Invalidate the displayed list after a transfer; refresh on the next App-tab visit.
+        lock (_sync) SdCard = new("", null, SdCard.Busy, null);
+        SdCardChanged?.Invoke();
         return destination + video.RemoteName;
     }
 
@@ -445,6 +521,8 @@ public sealed class DisplayEngine : IDisposable
         ReportStatus("Searching for display…");
         var port = string.IsNullOrWhiteSpace(_settings.Port) ? null : _settings.Port;
         _device = LcdDevice.Connect(port, _settings.Width, _settings.Height, s => Log?.Invoke(s));
+        lock (_sync) SdCard = new("", null, SdCard.Busy, null);
+        SdCardChanged?.Invoke();
         _device.FullFrameDelayMs = _settings.FullFrameDelayMs;
         _device.StopPlayback();
         Storage = _device.StorageInfo();
@@ -457,6 +535,8 @@ public sealed class DisplayEngine : IDisposable
 
     private void Disconnect()
     {
+        lock (_sync) SdCard = new("", null, false, null);
+        SdCardChanged?.Invoke();
         _device?.Dispose();
         _device = null;
         _activeVideo = null; // started again after reconnecting

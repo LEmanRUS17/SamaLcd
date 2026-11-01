@@ -50,13 +50,16 @@ public static class DeviceVideo
         return img.IsAnimated;
     }
 
-    public static string CropPoster(string source)
+    public static string CropPoster(string source, double seconds = 0)
     {
+        if (!double.IsFinite(seconds) || seconds < 0) throw new ArgumentOutOfRangeException(nameof(seconds));
+        seconds = Math.Round(seconds, 2);
         var info = new FileInfo(source);
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{info.FullName}|{info.Length}|{info.LastWriteTimeUtc.Ticks}")))[..16];
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{info.FullName}|{info.Length}|{info.LastWriteTimeUtc.Ticks}|{seconds.ToString("F2", CultureInfo.InvariantCulture)}")))[..16];
         Directory.CreateDirectory(CacheDirectory);
         var path = Path.Combine(CacheDirectory, hash + "-source.png");
-        if (!File.Exists(path)) Run(VideoSource.FindFfmpeg() ?? throw new IOException("FFmpeg unavailable"), ["-y", "-i", source, "-frames:v", "1", path]);
+        if (!File.Exists(path)) Run(VideoSource.FindFfmpeg() ?? throw new IOException("FFmpeg unavailable"), ["-y", "-ss", seconds.ToString("F2", CultureInfo.InvariantCulture), "-i", source, "-frames:v", "1", path], 30_000);
+        if (!File.Exists(path)) throw new IOException(L.Get("Cannot preview this file"));
         return path;
     }
 
@@ -116,13 +119,13 @@ public static class DeviceVideo
         return new PreparedVideo(mp4, $"{RemotePrefix}{hash}.mp4", thumb, new FileInfo(mp4).Length);
     }
 
-    private static void Run(string exe, string[] args)
+    private static void Run(string exe, string[] args, int timeoutMs = 10 * 60_000)
     {
         var psi = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true };
         foreach (var a in args) psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;
         var err = p.StandardError.ReadToEndAsync();
-        if (!p.WaitForExit(10 * 60_000))
+        if (!p.WaitForExit(timeoutMs))
         {
             p.Kill();
             throw new TimeoutException(L.Get("ffmpeg took too long"));

@@ -238,12 +238,17 @@ public sealed class LcdDevice : IDisposable
     {
         var reply = TextCommand(LcdCommand.ListDir, folder, 3000);
         var idx = reply.IndexOf("file:", StringComparison.Ordinal);
-        return idx < 0 ? [] : reply[(idx + 5)..].Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (idx < 0) throw new IOException("Invalid directory reply");
+        return reply[(idx + 5)..].Split('/', StringSplitOptions.RemoveEmptyEntries);
     }
 
     /// <summary>Size of a file on the panel, 0 when it does not exist.</summary>
-    public long FileSize(string path) =>
-        long.TryParse(TextCommand(LcdCommand.FileSize, path, 3000).Trim(), out var v) ? v : 0;
+    public long FileSize(string path)
+    {
+        var reply = TextCommand(LcdCommand.FileSize, path, 3000).Trim();
+        if (!long.TryParse(reply, out var size) || size < 0) throw new IOException("Invalid file size reply");
+        return size;
+    }
 
     /// <summary>Pause after each 249 KB block of an upload; the panel drops data if it arrives faster than it can write.</summary>
     public int UploadBlockDelayMs { get; set; }

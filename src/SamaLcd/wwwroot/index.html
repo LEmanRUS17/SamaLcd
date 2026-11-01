@@ -90,8 +90,6 @@
             <div class="palette" id="bgPalette"></div>
           </div>
 
-          <button id="cropBackground" class="btn btn-primary btn-soft w-fit" data-i18n="Crop / zoom…">Crop / zoom…</button>
-
           <div id="bgFileBox" class="mt-2 space-y-3">
             <div class="text-sm opacity-70"><span data-i18n="Any image, GIF or video from your computer.">Any image, GIF or video from your computer.</span></div>
             <div class="flex items-center gap-3">
@@ -110,6 +108,7 @@
               </div>
             </fieldset>
           </div>
+          <button id="cropBackground" class="btn btn-primary btn-soft w-fit mt-2" data-i18n="Crop / zoom…">Crop / zoom…</button>
         </div>
       </div>
 
@@ -251,6 +250,19 @@
           <button id="retryFfmpeg" class="btn btn-sm btn-ghost w-fit" data-i18n="Check FFmpeg">Check FFmpeg</button>
         </div>
       </div>
+      <div class="card bg-base-100 shadow-sm min-w-0">
+        <div class="card-body min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="card-title flex-1" data-i18n="SD card files">SD card files</h2>
+            <button id="refreshSdFiles" class="btn btn-sm btn-ghost" data-i18n="Refresh">Refresh</button>
+            <button id="clearSdFiles" class="btn btn-sm btn-error btn-soft" disabled data-i18n="Clear videos…">Clear videos…</button>
+          </div>
+          <p class="text-xs opacity-60" data-i18n="Videos in /mnt/SDCARD/video/. Other SD folders are not changed.">Videos in /mnt/SDCARD/video/. Other SD folders are not changed.</p>
+          <div id="sdFilesSummary" class="text-sm opacity-70" aria-live="polite"></div>
+          <div id="sdFilesError" class="text-sm text-error" role="alert"></div>
+          <ul id="sdFilesList" class="sd-file-list text-sm select-text"></ul>
+        </div>
+      </div>
     </section>
   </main>
 </div>
@@ -261,7 +273,13 @@
   <div class="modal-box max-w-xl">
     <h2 class="font-bold text-lg" data-i18n="Square crop">Square crop</h2>
     <p class="text-sm opacity-70 my-2" data-i18n="Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.">Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.</p>
-    <canvas id="cropCanvas" width="480" height="480" style="width:min(100%,480px);aspect-ratio:1;display:block;touch-action:none;cursor:grab;background:black;margin:auto"></canvas>
+    <canvas id="cropCanvas" class="crop-canvas" width="480" height="480"></canvas>
+    <div id="cropTimeline" class="hidden mt-3">
+      <div class="flex justify-between text-sm mb-2"><label for="cropSeek" data-i18n="Video preview">Video preview</label><output id="cropTime" for="cropSeek" class="font-mono"></output></div>
+      <input id="cropSeek" type="range" min="0" max="1" step="0.1" value="0" class="range range-primary range-sm w-full">
+      <p class="text-xs opacity-60 mt-1" data-i18n="Choose a visible frame to adjust the crop. The crop applies to the entire video.">Choose a visible frame to adjust the crop. The crop applies to the entire video.</p>
+      <p id="cropFrameStatus" class="text-xs opacity-70" aria-live="polite"></p>
+    </div>
     <label class="label mt-3" for="cropZoom" data-i18n="Zoom">Zoom</label>
     <input id="cropZoom" type="range" min="1" max="8" step="0.01" value="1" class="range range-primary w-full">
     <div class="modal-action flex-wrap">
@@ -281,6 +299,19 @@
     <div class="modal-action">
       <button id="sdCleanupCancel" class="btn" data-i18n="Cancel and keep files">Cancel and keep files</button>
       <button id="sdCleanupApprove" class="btn btn-error" data-i18n="Delete listed videos and upload">Delete listed videos and upload</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="sdClearDialog" class="modal">
+  <div class="modal-box max-w-xl">
+    <h2 class="font-bold text-lg" data-i18n="Clear SD videos?">Clear SD videos?</h2>
+    <p class="my-3 text-warning" data-i18n="Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.">Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.</p>
+    <p id="sdClearSize" class="text-sm"></p>
+    <ul id="sdClearFiles" class="sd-file-list my-3 text-sm select-text"></ul>
+    <div class="modal-action">
+      <button id="sdClearCancel" class="btn" data-i18n="Cancel and keep files">Cancel and keep files</button>
+      <button id="sdClearApprove" class="btn btn-error" data-i18n="Delete listed videos">Delete listed videos</button>
     </div>
   </div>
 </dialog>

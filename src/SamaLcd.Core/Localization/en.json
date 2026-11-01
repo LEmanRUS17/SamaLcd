@@ -186,5 +186,19 @@
   "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.",
   "SD files changed. Please retry and review the new file list.": "SD files changed. Please retry and review the new file list.",
   "Could not delete SD file: {0}": "Could not delete SD file: {0}",
-  "SD space is still insufficient after cleanup.": "SD space is still insufficient after cleanup."
+  "SD space is still insufficient after cleanup.": "SD space is still insufficient after cleanup.",
+  "SD card files": "SD card files",
+  "Clear videos…": "Clear videos…",
+  "Videos in /mnt/SDCARD/video/. Other SD folders are not changed.": "Videos in /mnt/SDCARD/video/. Other SD folders are not changed.",
+  "Video preview": "Video preview",
+  "Choose a visible frame to adjust the crop. The crop applies to the entire video.": "Choose a visible frame to adjust the crop. The crop applies to the entire video.",
+  "Loading frame…": "Loading frame…",
+  "Clear SD videos?": "Clear SD videos?",
+  "Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.": "Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.",
+  "Delete listed videos": "Delete listed videos",
+  "Reading or updating SD files…": "Reading or updating SD files…",
+  "Refresh to load the SD file list.": "Refresh to load the SD file list.",
+  "{0} files · {1} MiB": "{0} files · {1} MiB",
+  "No videos on the SD card.": "No videos on the SD card.",
+  "SD videos cleared. Playback is paused.": "SD videos cleared. Playback is paused."
 }

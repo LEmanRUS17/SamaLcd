@@ -45,6 +45,10 @@ sealed class MainForm : Form
     private string _status = "";
     private string _ffmpegStatus = "";
     private Task? _ffmpegCheck;
+    private readonly SemaphoreSlim _cropPreviewGate = new(1, 1);
+    private int _cropPreviewVersion;
+    private string? _cropSession;
+    private double _cropDuration;
     private string CropPath => _settings.BackgroundMode == BackgroundMode.File ? _settings.BackgroundFile
         : _settings.BackgroundMode == BackgroundMode.Gallery ? _settings.GalleryPath : "";
 
@@ -92,6 +96,7 @@ sealed class MainForm : Form
             PostStatus();
         });
         _engine.FrameRendered += OnFrame;
+        _engine.SdCardChanged += () => UI(PostStatus);
         _ = Handle; // cleanup requests must reach the UI even when started in the tray
         _engine.CleanupRequested += request => UI(() =>
         {
@@ -176,6 +181,13 @@ sealed class MainForm : Form
                 case "set": Set((string)m!["key"]!, m["value"]); break;
                 case "pickFile": PickBackgroundFile(); break;
                 case "editCrop": _ = EditCrop(); break;
+                case "seekCrop":
+                    _ = SeekCrop((string?)m!["session"] ?? "", (string?)m["source"] ?? "", (double?)m["seconds"] ?? 0, (int?)m["requestId"] ?? 0);
+                    break;
+                case "refreshSdFiles": _engine.RefreshSdFiles(); break;
+                case "clearSdFiles":
+                    if ((bool?)m!["approved"] == true) _engine.ClearSdFiles((string?)m["revision"] ?? "");
+                    break;
                 case "sdCleanupDecision":
                     _engine.ResolveCleanup((string?)m!["id"] ?? "", (bool?)m["approved"] ?? false);
                     break;
@@ -345,6 +357,7 @@ sealed class MainForm : Form
             megabytesSent = _engine.BytesSent / 1024.0 / 1024,
         storage = _engine.Storage,
         pendingCleanup = _engine.PendingCleanup,
+        sdCard = _engine.SdCard,
         });
     }
 
@@ -597,14 +610,53 @@ sealed class MainForm : Form
     {
         var source = CropPath;
         if (!File.Exists(source)) return;
+        var version = ++_cropPreviewVersion;
+        _cropSession = null;
         try
         {
-            if (_ffmpegCheck != null && FrameSources.IsVideo(source)) await _ffmpegCheck;
-            var poster = FrameSources.IsVideo(source) ? await Task.Run(() => DeviceVideo.CropPoster(source)) : source;
-            if (source != CropPath) return;
-            Post(new { type = "cropSource", source, url = UrlOf(poster), crop = _settings.BackgroundCrop });
+            var video = FrameSources.IsVideo(source);
+            if (_ffmpegCheck != null && video) await _ffmpegCheck;
+            await _cropPreviewGate.WaitAsync();
+            string poster;
+            double duration = 0, seconds = 0;
+            try
+            {
+                if (version != _cropPreviewVersion || source != CropPath) return;
+                if (video) duration = await Task.Run(() => DeviceVideo.Duration(VideoSource.FindFfmpeg() ?? throw new IOException("FFmpeg unavailable"), source));
+                seconds = video ? Math.Min(1, duration / 10) : 0;
+                poster = video ? await Task.Run(() => DeviceVideo.CropPoster(source, seconds)) : source;
+            }
+            finally { _cropPreviewGate.Release(); }
+            if (source != CropPath || version != _cropPreviewVersion) return;
+            _cropSession = Guid.NewGuid().ToString("N");
+            _cropDuration = duration;
+            Post(new { type = "cropSource", source, url = UrlOf(poster), crop = _settings.BackgroundCrop, session = _cropSession, duration, seconds });
         }
         catch (Exception ex) { Post(new { type = "toast", kind = "error", text = ex.Message }); }
+    }
+
+    private async Task SeekCrop(string session, string source, double seconds, int requestId)
+    {
+        if (session != _cropSession || source != CropPath || !double.IsFinite(seconds) || _cropDuration <= 0) return;
+        var version = ++_cropPreviewVersion;
+        try
+        {
+            await _cropPreviewGate.WaitAsync();
+            string poster;
+            try
+            {
+                if (version != _cropPreviewVersion || session != _cropSession || source != CropPath) return;
+                seconds = Math.Clamp(seconds, 0, Math.Max(0, _cropDuration - .1));
+                poster = await Task.Run(() => DeviceVideo.CropPoster(source, seconds));
+            }
+            finally { _cropPreviewGate.Release(); }
+            if (version == _cropPreviewVersion && session == _cropSession && source == CropPath)
+                Post(new { type = "cropFrame", session, source, requestId, url = UrlOf(poster), seconds });
+        }
+        catch (Exception ex)
+        {
+            if (version == _cropPreviewVersion) Post(new { type = "cropFrame", session, source, requestId, error = ex.Message });
+        }
     }
 
     private void ApplyLanguage()

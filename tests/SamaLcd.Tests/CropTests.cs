@@ -10,6 +10,39 @@ namespace SamaLcd.Tests;
 
 public class CropTests
 {
+    [Fact]
+    public async Task VideoPreviewSeeksPastABlackOpeningFrame()
+    {
+        var ffmpeg = VideoSource.FindFfmpeg();
+        if (ffmpeg == null) return;
+        var dir = Directory.CreateTempSubdirectory("samalcd-seek-").FullName;
+        string? first = null, later = null;
+        try
+        {
+            var source = Path.Combine(dir, "black-then-blue.mp4");
+            var psi = new ProcessStartInfo(ffmpeg) { UseShellExecute=false, CreateNoWindow=true, RedirectStandardError=true };
+            foreach (var a in new[] { "-y", "-f", "lavfi", "-i", "color=c=black:s=160x90:r=10:d=1", "-f", "lavfi", "-i", "color=c=blue:s=160x90:r=10:d=1", "-filter_complex", "[0:v][1:v]concat=n=2:v=1:a=0", "-c:v", "libx264", "-pix_fmt", "yuv420p", source }) psi.ArgumentList.Add(a);
+            using var process = Process.Start(psi)!;
+            var error = process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync(new CancellationTokenSource(30000).Token);
+            Assert.True(process.ExitCode == 0, await error);
+            first = DeviceVideo.CropPoster(source, 0);
+            later = DeviceVideo.CropPoster(source, 1.5);
+            Assert.NotEqual(first, later);
+            using var black = new Bitmap(first);
+            using var blue = new Bitmap(later);
+            Assert.True(black.GetPixel(80,45).B < 10);
+            Assert.True(blue.GetPixel(80,45).B > 230);
+            Assert.Equal(black.Size, blue.Size);
+        }
+        finally
+        {
+            if (first != null) File.Delete(first);
+            if (later != null) File.Delete(later);
+            Directory.Delete(dir,true);
+        }
+    }
+
     [Theory]
     [InlineData(1920,1080)]
     [InlineData(1080,1920)]

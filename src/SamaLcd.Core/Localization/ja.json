@@ -186,5 +186,19 @@
   "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "SD動画を削除しても容量が不足します。短い動画を選ぶかSDカードを手動で整理してください。",
   "SD files changed. Please retry and review the new file list.": "SDファイルが変更されました。再試行して一覧を確認してください。",
   "Could not delete SD file: {0}": "SDファイルを削除できません：{0}",
-  "SD space is still insufficient after cleanup.": "削除後もSDの容量が不足しています。"
+  "SD space is still insufficient after cleanup.": "削除後もSDの容量が不足しています。",
+  "SD card files": "SD カードのファイル",
+  "Clear videos…": "動画を消去…",
+  "Videos in /mnt/SDCARD/video/. Other SD folders are not changed.": "SD カードの動画フォルダーのみを管理します。他のフォルダーは変更されません。",
+  "Video preview": "動画プレビュー",
+  "Choose a visible frame to adjust the crop. The crop applies to the entire video.": "シークバーで見やすいフレームを選んで調整します。切り抜きは動画全体に適用されます。",
+  "Loading frame…": "フレームを読み込み中…",
+  "Clear SD videos?": "SD カードの動画を消去しますか？",
+  "Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.": "一覧の動画を完全に削除しますか？再生は一時停止されます。SD カードの他のフォルダーは変更されません。",
+  "Delete listed videos": "一覧の動画を削除",
+  "Reading or updating SD files…": "SD カードのファイルを読み込み・更新中…",
+  "Refresh to load the SD file list.": "更新すると SD カードのファイル一覧を読み込みます。",
+  "{0} files · {1} MiB": "{0} ファイル · {1} MiB",
+  "No videos on the SD card.": "SD カードに動画はありません。",
+  "SD videos cleared. Playback is paused.": "SD カードの動画を消去しました。再生は一時停止中です。"
 }

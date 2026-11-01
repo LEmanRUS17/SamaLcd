@@ -186,5 +186,19 @@
   "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "Удаления видео SD недостаточно. Выберите короткий фрагмент или очистите карту вручную.",
   "SD files changed. Please retry and review the new file list.": "Файлы SD изменились. Повторите и проверьте новый список.",
   "Could not delete SD file: {0}": "Не удалось удалить файл SD: {0}",
-  "SD space is still insufficient after cleanup.": "После очистки места на SD всё ещё недостаточно."
+  "SD space is still insufficient after cleanup.": "После очистки места на SD всё ещё недостаточно.",
+  "SD card files": "Файлы SD-карты",
+  "Clear videos…": "Удалить видео…",
+  "Videos in /mnt/SDCARD/video/. Other SD folders are not changed.": "Только видео в /mnt/SDCARD/video/. Другие папки SD-карты не изменяются.",
+  "Video preview": "Предпросмотр видео",
+  "Choose a visible frame to adjust the crop. The crop applies to the entire video.": "Выберите видимый кадр для настройки обрезки. Обрезка применяется ко всему видео.",
+  "Loading frame…": "Загрузка кадра…",
+  "Clear SD videos?": "Удалить видео с SD-карты?",
+  "Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.": "Безвозвратно удалить перечисленные видео? Воспроизведение будет приостановлено. Другие папки SD-карты не изменяются.",
+  "Delete listed videos": "Удалить перечисленные видео",
+  "Reading or updating SD files…": "Чтение или обновление файлов SD-карты…",
+  "Refresh to load the SD file list.": "Нажмите «Обновить», чтобы загрузить список файлов SD-карты.",
+  "{0} files · {1} MiB": "Файлов: {0} · {1} МиБ",
+  "No videos on the SD card.": "На SD-карте нет видео.",
+  "SD videos cleared. Playback is paused.": "Видео с SD-карты удалены. Воспроизведение приостановлено."
 }

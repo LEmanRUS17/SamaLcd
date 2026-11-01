@@ -36,3 +36,45 @@
   document.querySelector('#sdCleanupApprove').onclick=()=>decide(true);
   dialog.addEventListener('cancel',event=>{event.preventDefault();decide(false);});
 })();
+
+(() => {
+  const dialog = document.querySelector('#sdClearDialog');
+  const clear = document.querySelector('#clearSdFiles'), refresh = document.querySelector('#refreshSdFiles');
+  let card = null, confirmation = null;
+  const total = files => files.reduce((sum, file) => sum + file.size, 0);
+  const fillList = (element, files) => element.replaceChildren(...files.map(file => {
+    const li = document.createElement('li'), name = document.createElement('span'), size = document.createElement('span');
+    name.className = 'sd-file-name'; size.className = 'sd-file-size';
+    name.textContent = file.name; size.textContent = `${(file.size / 1048576).toFixed(2)} MiB`;
+    li.append(name, size); return li;
+  }));
+  window.renderSdCard = (next, pendingCleanup) => {
+    card = next;
+    if (confirmation && (!card || card.busy || card.revision !== confirmation.revision || pendingCleanup)) {
+      confirmation = null; dialog.close();
+    }
+    const files = card?.files || [];
+    refresh.disabled = !!card?.busy || !!pendingCleanup;
+    clear.disabled = refresh.disabled || !card?.revision || !files.length;
+    document.querySelector('#sdFilesSummary').textContent = card?.busy ? tr('Reading or updating SD files…') : !card?.files ? tr('Refresh to load the SD file list.') : files.length ? tr('{0} files · {1} MiB', files.length, (total(files) / 1048576).toFixed(2)) : tr('No videos on the SD card.');
+    document.querySelector('#sdFilesError').textContent = card?.error || '';
+    fillList(document.querySelector('#sdFilesList'), files);
+  };
+  refresh.onclick = () => host.send({cmd:'refreshSdFiles'});
+  clear.onclick = () => {
+    if (clear.disabled || !card?.files?.length) return;
+    confirmation = {revision:card.revision, files:card.files};
+    fillList(document.querySelector('#sdClearFiles'), confirmation.files);
+    document.querySelector('#sdClearSize').textContent = tr('{0} files · {1} MiB', confirmation.files.length, (total(confirmation.files) / 1048576).toFixed(2));
+    dialog.showModal(); document.querySelector('#sdClearCancel').focus();
+  };
+  const cancel = () => { confirmation = null; dialog.close(); };
+  document.querySelector('#sdClearCancel').onclick = cancel;
+  dialog.addEventListener('cancel', event => {event.preventDefault(); cancel();});
+  document.querySelector('#sdClearApprove').onclick = () => {
+    if (!confirmation) return;
+    const revision = confirmation.revision;
+    confirmation = null; dialog.close(); clear.disabled = true;
+    host.send({cmd:'clearSdFiles',revision,approved:true});
+  };
+})();

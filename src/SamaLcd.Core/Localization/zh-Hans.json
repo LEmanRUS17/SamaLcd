@@ -186,5 +186,19 @@
   "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "删除 SD 视频仍无法释放足够空间，请选择较短片段或手动管理 SD 卡。",
   "SD files changed. Please retry and review the new file list.": "SD 文件发生变化，请重试并核对新的文件列表。",
   "Could not delete SD file: {0}": "无法删除 SD 文件：{0}",
-  "SD space is still insufficient after cleanup.": "清理后 SD 空间仍不足。"
+  "SD space is still insufficient after cleanup.": "清理后 SD 空间仍不足。",
+  "SD card files": "SD 卡文件",
+  "Clear videos…": "清空视频…",
+  "Videos in /mnt/SDCARD/video/. Other SD folders are not changed.": "仅管理 SD 卡视频目录，其他文件夹不受影响。",
+  "Video preview": "视频预览",
+  "Choose a visible frame to adjust the crop. The crop applies to the entire video.": "拖动进度条选择清晰画面来调整裁剪。裁剪会应用到整段视频。",
+  "Loading frame…": "正在加载画面…",
+  "Clear SD videos?": "清空 SD 卡视频？",
+  "Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.": "确定永久删除以下视频吗？播放将暂停。SD 卡其他文件夹不受影响。",
+  "Delete listed videos": "删除列出的视频",
+  "Reading or updating SD files…": "正在读取或更新 SD 卡文件…",
+  "Refresh to load the SD file list.": "点击刷新读取 SD 卡文件列表。",
+  "{0} files · {1} MiB": "{0} 个文件 · {1} MiB",
+  "No videos on the SD card.": "SD 卡视频目录为空。",
+  "SD videos cleared. Playback is paused.": "SD 卡视频已清空，播放已暂停。"
 }

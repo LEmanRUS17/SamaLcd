@@ -34,4 +34,16 @@ public class StorageConsentTests
     {
         Assert.Throws<IOException>(()=>VideoStoragePolicy.DeleteApprovedSnapshot(true,[new("one.mp4",10)],_=>10,_=>{}));
     }
+    [Theory]
+    [InlineData("")]
+    [InlineData("..")]
+    [InlineData("../other.mp4")]
+    [InlineData("folder/file.mp4")]
+    [InlineData("folder\\file.mp4")]
+    public void UnsafeNamesCannotEscapeTheDisplayedVideoDirectory(string name)
+    {
+        int deleted=0;
+        Assert.Throws<IOException>(()=>VideoStoragePolicy.DeleteApprovedSnapshot(true,[new(name,10)],_=>10,_=>deleted++));
+        Assert.Equal(0,deleted);
+    }
 }

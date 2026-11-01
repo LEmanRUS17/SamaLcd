@@ -64,3 +64,9 @@ body { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
 .item.selected .grip { display: block; }
 .fieldset.pos { display: flex; flex-wrap: wrap; gap: 6px; }
 .fieldset.pos > legend { width: 100%; }
+/* File names may be longer than the settings column. */
+.sd-file-list { max-height: 240px; overflow: auto; }
+.sd-file-list li { display: flex; gap: 12px; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.sd-file-list .sd-file-name { overflow-wrap: anywhere; min-width: 0; }
+.sd-file-list .sd-file-size { white-space: nowrap; opacity: .65; }
+.crop-canvas { width: min(100%, 480px, max(220px, calc(90dvh - 360px))); aspect-ratio: 1; display: block; touch-action: none; cursor: grab; background: black; margin: auto; }

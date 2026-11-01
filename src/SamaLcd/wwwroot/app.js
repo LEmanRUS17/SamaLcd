@@ -83,6 +83,7 @@ function activateTab(name) {
   for (const p of $$('.page')) p.classList.toggle('hidden', p.dataset.page !== name);
   try { localStorage.setItem('tab', name); } catch { }
   if (name === 'sensors' || name === 'data') host.send({ cmd: 'sensors' });
+  if (name === 'app') host.send({cmd:'refreshSdFiles'});
   if (name === 'data' && layout) renderEditor(); // the hidden canvas has no measurable size
 }
 $('#tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) activateTab(t.dataset.tab); });
@@ -149,6 +150,9 @@ $('#variants').addEventListener('click', e => {
 
 let lastStatus = null;
 function renderStatus(m) {
+  window.renderSdCard(m.sdCard || null, m.pendingCleanup);
+  if (m.connected && m.sdCard && !m.sdCard.files && !m.sdCard.busy && !m.sdCard.error && !m.pendingCleanup && !document.querySelector('[data-page="app"]').classList.contains('hidden'))
+    host.send({cmd:'refreshSdFiles'});
   if ('pendingCleanup' in m) window.showSdCleanup(m.pendingCleanup);
   if (typeof m.paused === 'boolean') $('#paused').checked = m.paused;
   if (m.storage?.length === 6) $('#storageInfo').textContent = tr('Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free', ...( [2,0,5,3].map(i => (m.storage[i]/1024).toFixed(1)) ));
@@ -167,6 +171,7 @@ host.on(m => {
   switch (m.type) {
     case 'state': applyState(m); break;
     case 'cropSource': window.openCropEditor(m); break;
+    case 'cropFrame': window.updateCropFrame(m); break;
     case 'sdCleanup': window.showSdCleanup(m.request); break;
     case 'frame':
       $('#preview').src = m.data;

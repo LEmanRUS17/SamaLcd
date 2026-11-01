@@ -3,6 +3,7 @@ using SamaLcd.Core.Rendering;
 namespace SamaLcd.Core;
 
 public sealed record SdVideoFile(string Name, long Size);
+public sealed record SdCardState(string Revision, SdVideoFile[]? Files, bool Busy, string? Error);
 public sealed record SdCleanupRequest(string Id, long RequiredBytes, long FreeBytes, SdVideoFile[] Files)
 {
     public long ReclaimableBytes => Files.Sum(f => f.Size);
@@ -18,7 +19,7 @@ public static class VideoStoragePolicy
         if (!approved) throw new OperationCanceledException();
         foreach (var file in files)
         {
-            if (file.Name is "." or ".." || file.Name.IndexOfAny(['/', '\\']) >= 0 || file.Size <= 0)
+            if (string.IsNullOrWhiteSpace(file.Name) || file.Name is "." or ".." || file.Name.IndexOfAny(['/', '\\', '\0']) >= 0 || file.Size <= 0)
                 throw new IOException("Invalid SD filename");
             if (size(file.Name) != file.Size)
                 throw new IOException(Localization.Localizer.Get("SD files changed. Please retry and review the new file list."));
