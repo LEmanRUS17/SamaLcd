@@ -1,6 +1,7 @@
 /* Things Tailwind utilities do not cover: the round preview and the layout editor. */
 body { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
 .media-file-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; white-space: normal; }
+#fileScaling { padding-bottom: 0; }
 
 .logo {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
