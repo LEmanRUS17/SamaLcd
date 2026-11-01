@@ -121,8 +121,10 @@ async function applyState(s) {
   setJoin($('#fit'), s.fit);
   $('#bgColorBox').classList.toggle('hidden', s.bgMode !== 'color');
   $('#bgFileBox').classList.toggle('hidden', s.bgMode !== 'file');
+  $('#fileScaling').classList.toggle('hidden', s.bgMode !== 'file');
   palette($('#bgPalette'), BG_COLORS, s.bgColor, c => set('bgColor', c));
   $('#bgFileName').textContent = s.bgFileName || tr("No file selected");
+  $('#bgFileName').title = s.bgFileName || '';
   $('#bgFileKind').textContent = s.bgFileKind || '';
   $('#cpuHint').classList.toggle('hidden', !s.cpuHint);
   $('#cpuHintData').classList.toggle('hidden', !s.cpuHint);
@@ -163,7 +165,8 @@ function renderStatus(m) {
   if (m.storage?.length === 6) $('#storageInfo').textContent = tr('Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free', ...( [2,0,5,3].map(i => (m.storage[i]/1024).toFixed(1)) ));
   $('#status').textContent = m.textKey ? tr(m.textKey, ...(m.textArgs || [])) : m.text;
   const c = $('#conn');
-  c.className = `badge badge-soft gap-1 ml-2 whitespace-nowrap ${m.paused ? 'badge-warning' : m.connected ? 'badge-success' : 'badge-error'}`;
+  $('#status').title = $('#status').textContent;
+  c.className = `badge badge-soft gap-1 ml-2 whitespace-nowrap shrink-0 ${m.paused ? 'badge-warning' : m.connected ? 'badge-success' : 'badge-error'}`;
   c.innerHTML = `<span class="status ${m.paused ? 'status-warning' : m.connected ? 'status-success' : 'status-error'}"></span> ` +
     esc(tr(m.paused ? 'Paused' : m.connected ? 'Display connected' : 'No display'));
   $('#traffic').textContent = m.framesSent > 0 ? tr('Frames sent: {0}, {1:0.0} MB', m.framesSent, m.megabytesSent) : '';

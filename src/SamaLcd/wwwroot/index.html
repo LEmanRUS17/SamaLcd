@@ -14,13 +14,13 @@
 <!-- Top bar -->
 <div class="navbar bg-base-100 border-b border-base-300 px-4 gap-3 sticky top-0 z-20">
   <div class="flex items-center gap-3 flex-1 min-w-0">
-    <div class="logo"></div>
-    <div class="leading-tight">
+    <div class="logo shrink-0"></div>
+    <div class="leading-tight shrink-0 whitespace-nowrap">
       <div class="font-bold text-lg">SAMA LCD</div>
       <div class="text-xs opacity-60"><span data-i18n="Water cooling display">Water cooling display</span></div>
     </div>
-    <div id="conn" class="badge badge-soft badge-warning gap-1 ml-2 whitespace-nowrap"><span class="status status-warning"></span> <span data-i18n="Searching for display">Searching for display</span></div>
-    <div id="status" class="text-sm opacity-60 truncate"></div>
+    <div id="conn" class="badge badge-soft badge-warning gap-1 ml-2 whitespace-nowrap shrink-0"><span class="status status-warning"></span> <span data-i18n="Searching for display">Searching for display</span></div>
+    <div id="status" class="text-sm opacity-60 truncate flex-1 min-w-0"></div>
   </div>
   <label class="label text-sm gap-2 cursor-pointer">
     <input id="paused" type="checkbox" class="toggle toggle-sm toggle-warning"> <span data-i18n="Pause">Pause</span> </label>
@@ -66,9 +66,9 @@
     </div>
 
     <!-- IMAGE -->
-    <section data-page="image" class="page grid 2xl:grid-cols-[1fr_340px] gap-4 items-start">
-      <div class="card bg-base-100 shadow-sm">
-        <div class="card-body">
+    <section data-page="image" class="page grid 2xl:grid-cols-[minmax(0,1fr)_340px] gap-4 items-start">
+      <div class="card bg-base-100 shadow-sm min-w-0">
+        <div class="card-body min-w-0">
           <div class="flex flex-wrap items-center gap-3">
             <h2 class="card-title flex-1"><span data-i18n="Background">Background</span></h2>
             <div class="join" id="bgMode">
@@ -92,16 +92,18 @@
             <div class="palette" id="bgPalette"></div>
           </div>
 
-          <div id="bgFileBox" class="mt-2 space-y-3">
+          <div id="bgFileBox" class="mt-2 min-w-0 space-y-3">
             <div class="text-sm opacity-70"><span data-i18n="Any image, GIF or video from your computer.">Any image, GIF or video from your computer.</span></div>
             <div class="flex items-center gap-3">
-              <button id="pickFile" class="btn btn-primary btn-soft"><span data-i18n="Choose file…">Choose file…</span></button>
-              <div class="min-w-0">
-                <div id="bgFileName" class="font-medium truncate"><span data-i18n="No file selected">No file selected</span></div>
+              <button id="pickFile" class="btn btn-primary btn-soft shrink-0"><span data-i18n="Choose file…">Choose file…</span></button>
+              <div class="min-w-0 flex-1">
+                <div id="bgFileName" class="font-medium media-file-name"><span data-i18n="No file selected">No file selected</span></div>
                 <div id="bgFileKind" class="text-xs opacity-60"></div>
               </div>
             </div>
-            <fieldset class="fieldset">
+          </div>
+          <div class="flex flex-wrap items-end gap-4">
+            <fieldset id="fileScaling" class="fieldset">
               <legend class="fieldset-legend"><span data-i18n="Scaling">Scaling</span></legend>
               <div class="join" id="fit">
                 <button class="btn btn-sm join-item" data-value="cover"><span data-i18n="Fill">Fill</span></button>
@@ -109,8 +111,8 @@
                 <button class="btn btn-sm join-item" data-value="stretch"><span data-i18n="Stretch">Stretch</span></button>
               </div>
             </fieldset>
+            <button id="cropBackground" class="btn btn-sm btn-primary btn-soft w-fit" data-i18n="Crop / zoom…">Crop / zoom…</button>
           </div>
-          <button id="cropBackground" class="btn btn-primary btn-soft w-fit mt-2" data-i18n="Crop / zoom…">Crop / zoom…</button>
         </div>
       </div>
 
