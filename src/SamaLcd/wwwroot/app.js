@@ -97,6 +97,8 @@ async function applyState(s) {
   if (revision !== stateRevision) return;
   $('#language').value = I18n.language;
   state = s;
+  $('#cropBackground').disabled = !s.canCrop;
+  $('#ffmpegStatus').textContent = s.ffmpegStatus || '';
   const custom = s.theme === CUSTOM;
   $('#variantBadge').textContent = custom ? tr("Custom layout") : s.theme;
   $('#brightness').value = s.brightness;
@@ -155,10 +157,12 @@ function renderStatus(m) {
   $('#deviceInfo').textContent = m.device || tr('Display not connected');
 }
 $('#language').onchange = e => set('language', e.target.value);
+$('#retryFfmpeg').onclick = () => host.send({cmd:'installFfmpeg'});
 
 host.on(m => {
   switch (m.type) {
     case 'state': applyState(m); break;
+    case 'cropSource': window.openCropEditor(m); break;
     case 'frame':
       $('#preview').src = m.data;
       $('#canvasImg').src = m.data;

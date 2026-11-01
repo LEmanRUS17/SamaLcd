@@ -34,6 +34,7 @@ public sealed class AppSettings
     public string BackgroundColor { get; set; } = "#000000";
     /// <summary>Picture, GIF or video used when <see cref="BackgroundMode"/> is File.</summary>
     public string BackgroundFile { get; set; } = "";
+    public Rendering.SquareCrop? BackgroundCrop { get; set; }
     public Rendering.ImageFit BackgroundFit { get; set; } = Rendering.ImageFit.Cover;
     public int VideoFps { get; set; } = 20;
     /// <summary>

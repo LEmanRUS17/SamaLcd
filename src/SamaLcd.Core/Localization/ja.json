@@ -157,5 +157,18 @@
   " MB": " MB",
   " GB": " GB",
   " rpm": " rpm",
-  "{0}": "{0}"
+  "{0}": "{0}",
+  "Crop / zoom…": "拡大・切り抜き…",
+  "Square crop": "正方形に切り抜き",
+  "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.": "ドラッグで位置を調整し、拡大して黒帯を除去します。画面には円の内側だけが表示されます。",
+  "Zoom": "ズーム",
+  "Remove crop": "切り抜きを解除",
+  "Cancel": "キャンセル",
+  "Apply crop": "適用",
+  "Cannot preview this file": "このファイルをプレビューできません",
+  "Check FFmpeg": "FFmpegを確認",
+  "Checking FFmpeg…": "FFmpegを確認中…",
+  "Downloading FFmpeg…": "FFmpegをダウンロード中…",
+  "FFmpeg ready": "FFmpegの準備完了",
+  "FFmpeg setup failed: {0}": "FFmpegのセットアップに失敗しました：{0}"
 }

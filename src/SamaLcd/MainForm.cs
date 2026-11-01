@@ -43,6 +43,10 @@ sealed class MainForm : Form
     private bool _webReady;
     private bool _exiting;
     private string _status = "";
+    private string _ffmpegStatus = "";
+    private Task? _ffmpegCheck;
+    private string CropPath => _settings.BackgroundMode == BackgroundMode.File ? _settings.BackgroundFile
+        : _settings.BackgroundMode == BackgroundMode.Gallery ? _settings.GalleryPath : "";
 
     public ApplicationContext TrayContext { get; } = new();
 
@@ -88,6 +92,7 @@ sealed class MainForm : Form
             PostStatus();
         });
         _engine.FrameRendered += OnFrame;
+        _ffmpegCheck = CheckFfmpeg();
     }
 
     // ---------- WebView2 ----------
@@ -164,6 +169,15 @@ sealed class MainForm : Form
                     break;
                 case "set": Set((string)m!["key"]!, m["value"]); break;
                 case "pickFile": PickBackgroundFile(); break;
+                case "editCrop": _ = EditCrop(); break;
+                case "installFfmpeg": if (_ffmpegCheck?.IsCompleted != false) _ffmpegCheck = CheckFfmpeg(); break;
+                case "applyCrop":
+                    if ((string?)m!["source"] != CropPath) break;
+                    _settings.BackgroundCrop = m["crop"]?.Deserialize<SquareCrop>(Theme.JsonOptions)?.Normalize();
+                    _settings.Save();
+                    _engine.ApplyBackgroundSettings();
+                    PostState();
+                    break;
                 case "layout":
                     _layout = m!["layout"].Deserialize<CustomLayout>(Theme.JsonOptions) ?? _layout;
                     _layout.Save();
@@ -243,6 +257,7 @@ sealed class MainForm : Form
                 _engine.ApplyBackgroundSettings();
                 break;
             case "gallery":
+                _settings.BackgroundCrop = null;
                 // an empty name is the tile with the variant's own background
                 _settings.GalleryFile = Path.GetFileName((string?)value ?? "");
                 _settings.BackgroundMode = _settings.GalleryFile.Length > 0 ? BackgroundMode.Gallery : BackgroundMode.Theme;
@@ -292,6 +307,9 @@ sealed class MainForm : Form
             bgFileKind = BackgroundKind(_settings.BackgroundFile),
             fit = _settings.BackgroundFit,
             onDevice = _settings.PlayVideoOnDevice,
+            crop = _settings.BackgroundCrop,
+            canCrop = File.Exists(CropPath),
+            ffmpegStatus = _ffmpegStatus,
             autostart = SafeAutostartState(),
             paused = _engine.Paused,
             cpuHint = _sensors.CpuSensorsUnavailable,
@@ -364,7 +382,7 @@ sealed class MainForm : Form
     {
         if (!_webReady) return;
         // Over a video played by the panel itself the frame is transparent: the page plays the file underneath.
-        var media = _engine.Media is { } m ? MediaOf(m.Source, m.Fit, m.Prepared) : null;
+        var media = _engine.Media is { } m ? MediaOf(m.Prepared ?? m.Source, m.Prepared != null ? ImageFit.Stretch : m.Fit) : null;
         string data;
         lock (_frameLock)
         {
@@ -530,6 +548,7 @@ sealed class MainForm : Form
             else
             {
                 _settings.BackgroundFile = dlg.FileName;
+                _settings.BackgroundCrop = null;
                 _settings.BackgroundMode = BackgroundMode.File;
                 _settings.Save();
                 _engine.ApplyBackgroundSettings();
@@ -548,6 +567,33 @@ sealed class MainForm : Form
     }
 
     // ---------- window and tray ----------
+
+    private async Task CheckFfmpeg()
+    {
+        try
+        {
+            _ffmpegStatus = L.Get("Checking FFmpeg…");
+            await Task.Run(() => FfmpegInstaller.EnsureAsync(key => UI(() => { _ffmpegStatus = L.Get(key); PostState(); })));
+            _ffmpegStatus = L.Get("FFmpeg ready");
+            UI(() => _engine.ApplyBackgroundSettings());
+        }
+        catch (Exception ex) { _ffmpegStatus = L.Get("FFmpeg setup failed: {0}", ex.Message); }
+        UI(PostState);
+    }
+
+    private async Task EditCrop()
+    {
+        var source = CropPath;
+        if (!File.Exists(source)) return;
+        try
+        {
+            if (_ffmpegCheck != null && FrameSources.IsVideo(source)) await _ffmpegCheck;
+            var poster = FrameSources.IsVideo(source) ? await Task.Run(() => DeviceVideo.CropPoster(source)) : source;
+            if (source != CropPath) return;
+            Post(new { type = "cropSource", source, url = UrlOf(poster), crop = _settings.BackgroundCrop });
+        }
+        catch (Exception ex) { Post(new { type = "toast", kind = "error", text = ex.Message }); }
+    }
 
     private void ApplyLanguage()
     {

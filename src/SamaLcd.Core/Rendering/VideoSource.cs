@@ -25,8 +25,8 @@ public static class FrameSources
     public static bool IsVideo(string path) =>
         VideoExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 
-    public static IFrameSource Open(string path, int width, int height, ImageFit fit, int fps) =>
-        IsVideo(path) ? new VideoSource(path, width, height, fit, fps) : new AnimatedImage(path);
+    public static IFrameSource Open(string path, int width, int height, ImageFit fit, int fps, SquareCrop? crop = null) =>
+        IsVideo(path) ? new VideoSource(path, width, height, fit, fps, crop) : new AnimatedImage(path);
 }
 
 /// <summary>
@@ -49,14 +49,15 @@ public sealed class VideoSource : IFrameSource
     /// <summary>Path of ffmpeg.exe: next to the program, on PATH, or the copy installed with SAMA.</summary>
     public static string? FindFfmpeg()
     {
-        var candidates = new List<string> { Path.Combine(AppContext.BaseDirectory, "ffmpeg.exe") };
+        var candidates = new List<string> { Path.Combine(AppContext.BaseDirectory, "ffmpeg.exe"), FfmpegInstaller.CachePath };
         candidates.AddRange((Environment.GetEnvironmentVariable("PATH") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries)
             .Select(d => Path.Combine(d.Trim(), "ffmpeg.exe")));
         candidates.Add(@"C:\Program Files (x86)\SAMA\ffmpeg.exe");
+        candidates.Add(@"C:\Program Files (x86)\SAMA\SAMA\SAMA_Multi_Chn\ffmpeg.exe");
         return candidates.FirstOrDefault(File.Exists);
     }
 
-    public VideoSource(string path, int width, int height, ImageFit fit, int fps)
+    public VideoSource(string path, int width, int height, ImageFit fit, int fps, SquareCrop? crop = null)
     {
         if (!File.Exists(path)) throw new FileNotFoundException(L.Get("Video not found"), path);
         var ffmpeg = FindFfmpeg() ?? throw new FileNotFoundException(L.Get("Video requires ffmpeg.exe next to SamaLcd.exe."));
@@ -71,6 +72,7 @@ public sealed class VideoSource : IFrameSource
             ImageFit.Contain => $"scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black",
             _ => $"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}",
         };
+        if (crop != null) scale = crop.Filter() + "," + $"scale={width}:{height},setsar=1";
         var psi = new ProcessStartInfo(ffmpeg)
         {
             UseShellExecute = false,

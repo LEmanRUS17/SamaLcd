@@ -157,5 +157,18 @@
   " MB": " МБ",
   " GB": " ГБ",
   " rpm": " об/м",
-  "{0}": "{0}"
+  "{0}": "{0}",
+  "Crop / zoom…": "Масштаб / обрезка…",
+  "Square crop": "Квадратная обрезка",
+  "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.": "Перетаскивайте изображение и увеличивайте, чтобы убрать чёрные полосы. На экране видна только область круга.",
+  "Zoom": "Масштаб",
+  "Remove crop": "Убрать обрезку",
+  "Cancel": "Отмена",
+  "Apply crop": "Применить",
+  "Cannot preview this file": "Не удалось открыть предпросмотр",
+  "Check FFmpeg": "Проверить FFmpeg",
+  "Checking FFmpeg…": "Проверка FFmpeg…",
+  "Downloading FFmpeg…": "Загрузка FFmpeg…",
+  "FFmpeg ready": "FFmpeg готов",
+  "FFmpeg setup failed: {0}": "Ошибка установки FFmpeg: {0}"
 }

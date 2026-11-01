@@ -150,3 +150,11 @@ ram.load ram.used ram.free board.temp pump.rpm fan.rpm` или любой иде
 - Новый вид виджета: класс в `Rendering/Theme.cs` (+ `JsonDerivedType`) и отрисовка в `ThemeRenderer.Render`.
 
 Сборка: `dotnet build`, тесты: `dotnet test`, публикация: `publish.ps1`.
+
+## Interactive square crop
+
+In Image, select a file or gallery background and choose **Crop / zoom…**. Drag the image and use the zoom slider or mouse wheel to exclude embedded black borders. The square selection has a circular display mask. **Apply crop** saves the selection; **Cancel** changes nothing, and **Remove crop** restores the scaling options. Choosing another file/gallery item resets its selection. Originals are never overwritten.
+
+Still images and streamed GIFs use the source rectangle in the renderer. Device-played GIF/video and streamed video apply the same rectangle through FFmpeg before resizing or rotation. Changed crops invalidate converted-video caches. A source-frame poster supports the crop dialog even for formats the browser cannot decode.
+
+At startup the app checks for `ffmpeg.exe` next to the program. It reuses an installed copy when available; otherwise it downloads the essentials ZIP and SHA-256 from the [gyan.dev Windows builds](https://www.gyan.dev/ffmpeg/builds/) linked by [ffmpeg.org](https://ffmpeg.org/download.html), checks the checksum, and atomically installs only the executable and license. If the app directory is not writable it uses `%LOCALAPPDATA%/SamaLcd/tools`. App settings show readiness or errors and offer a retry. Download failures do not prevent still-image use.

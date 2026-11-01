@@ -28,13 +28,23 @@ public static class DeviceVideo
         return img.IsAnimated;
     }
 
-    public static PreparedVideo Prepare(string source, ImageFit fit, int rotation, int width, int height, Action<string>? log = null)
+    public static string CropPoster(string source)
+    {
+        var info = new FileInfo(source);
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{info.FullName}|{info.Length}|{info.LastWriteTimeUtc.Ticks}")))[..16];
+        Directory.CreateDirectory(CacheDirectory);
+        var path = Path.Combine(CacheDirectory, hash + "-source.png");
+        if (!File.Exists(path)) Run(VideoSource.FindFfmpeg() ?? throw new IOException("FFmpeg unavailable"), ["-y", "-i", source, "-frames:v", "1", path]);
+        return path;
+    }
+
+    public static PreparedVideo Prepare(string source, ImageFit fit, int rotation, int width, int height, Action<string>? log = null, SquareCrop? crop = null)
     {
         var ffmpeg = VideoSource.FindFfmpeg() ?? throw new FileNotFoundException(L.Get("Video requires ffmpeg.exe next to SamaLcd.exe."));
         var info = new FileInfo(source);
         if (!info.Exists) throw new FileNotFoundException(L.Get("Background file not found"), source);
 
-        var key = $"{info.FullName}|{info.Length}|{info.LastWriteTimeUtc.Ticks}|{fit}|{rotation}|{width}x{height}";
+        var key = $"{info.FullName}|{info.Length}|{info.LastWriteTimeUtc.Ticks}|{fit}|{rotation}|{width}x{height}|{crop?.Normalize()}|crop-v1";
         var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(key)))[..10].ToLowerInvariant();
         Directory.CreateDirectory(CacheDirectory);
         var mp4 = Path.Combine(CacheDirectory, $"{hash}.mp4");
@@ -46,6 +56,7 @@ public static class DeviceVideo
             ImageFit.Contain => $"scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black",
             _ => $"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}",
         };
+        if (crop != null) scale = crop.Filter() + "," + $"scale={width}:{height}";
         // the overlay is rotated in software, so the video has to be turned the same way
         var turn = (((rotation % 360) + 360) % 360) switch
         {

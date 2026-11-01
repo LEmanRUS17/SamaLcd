@@ -159,7 +159,20 @@ globalThis.SamaLcdCatalogs = {
     " MB": " MB",
     " GB": " GB",
     " rpm": " rpm",
-    "{0}": "{0}"
+    "{0}": "{0}",
+    "Crop / zoom…": "Crop / zoom…",
+    "Square crop": "Square crop",
+    "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.": "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.",
+    "Zoom": "Zoom",
+    "Remove crop": "Remove crop",
+    "Cancel": "Cancel",
+    "Apply crop": "Apply crop",
+    "Cannot preview this file": "Cannot preview this file",
+    "Check FFmpeg": "Check FFmpeg",
+    "Checking FFmpeg…": "Checking FFmpeg…",
+    "Downloading FFmpeg…": "Downloading FFmpeg…",
+    "FFmpeg ready": "FFmpeg ready",
+    "FFmpeg setup failed: {0}": "FFmpeg setup failed: {0}"
   },
   "zh-Hans": {
     "Water cooling display": "水冷屏幕",
@@ -320,7 +333,20 @@ globalThis.SamaLcdCatalogs = {
     " MB": " MB",
     " GB": " GB",
     " rpm": " rpm",
-    "{0}": "{0}"
+    "{0}": "{0}",
+    "Crop / zoom…": "放大／裁剪…",
+    "Square crop": "正方形裁剪",
+    "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.": "拖动画面调整位置，放大可去除黑边。实体屏幕仅显示圆形范围。",
+    "Zoom": "缩放",
+    "Remove crop": "取消裁剪",
+    "Cancel": "取消",
+    "Apply crop": "应用裁剪",
+    "Cannot preview this file": "无法预览此文件",
+    "Check FFmpeg": "检查 FFmpeg",
+    "Checking FFmpeg…": "正在检查 FFmpeg…",
+    "Downloading FFmpeg…": "正在下载 FFmpeg…",
+    "FFmpeg ready": "FFmpeg 已就绪",
+    "FFmpeg setup failed: {0}": "FFmpeg 安装失败：{0}"
   },
   "ja": {
     "Water cooling display": "水冷ディスプレイ",
@@ -481,7 +507,20 @@ globalThis.SamaLcdCatalogs = {
     " MB": " MB",
     " GB": " GB",
     " rpm": " rpm",
-    "{0}": "{0}"
+    "{0}": "{0}",
+    "Crop / zoom…": "拡大・切り抜き…",
+    "Square crop": "正方形に切り抜き",
+    "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.": "ドラッグで位置を調整し、拡大して黒帯を除去します。画面には円の内側だけが表示されます。",
+    "Zoom": "ズーム",
+    "Remove crop": "切り抜きを解除",
+    "Cancel": "キャンセル",
+    "Apply crop": "適用",
+    "Cannot preview this file": "このファイルをプレビューできません",
+    "Check FFmpeg": "FFmpegを確認",
+    "Checking FFmpeg…": "FFmpegを確認中…",
+    "Downloading FFmpeg…": "FFmpegをダウンロード中…",
+    "FFmpeg ready": "FFmpegの準備完了",
+    "FFmpeg setup failed: {0}": "FFmpegのセットアップに失敗しました：{0}"
   },
   "ru": {
     "Water cooling display": "экран водяного охлаждения",
@@ -642,6 +681,19 @@ globalThis.SamaLcdCatalogs = {
     " MB": " МБ",
     " GB": " ГБ",
     " rpm": " об/м",
-    "{0}": "{0}"
+    "{0}": "{0}",
+    "Crop / zoom…": "Масштаб / обрезка…",
+    "Square crop": "Квадратная обрезка",
+    "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.": "Перетаскивайте изображение и увеличивайте, чтобы убрать чёрные полосы. На экране видна только область круга.",
+    "Zoom": "Масштаб",
+    "Remove crop": "Убрать обрезку",
+    "Cancel": "Отмена",
+    "Apply crop": "Применить",
+    "Cannot preview this file": "Не удалось открыть предпросмотр",
+    "Check FFmpeg": "Проверить FFmpeg",
+    "Checking FFmpeg…": "Проверка FFmpeg…",
+    "Downloading FFmpeg…": "Загрузка FFmpeg…",
+    "FFmpeg ready": "FFmpeg готов",
+    "FFmpeg setup failed: {0}": "Ошибка установки FFmpeg: {0}"
   }
 };

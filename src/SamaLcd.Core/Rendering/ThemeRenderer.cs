@@ -43,7 +43,7 @@ public sealed partial class ThemeRenderer : IDisposable
         if (_background != null || BackgroundError != null || _theme.Background.Image is not { Length: > 0 } path) return _background;
         try
         {
-            _background = FrameSources.Open(_theme.Resolve(path), Width, Height, _theme.Background.Fit, _theme.Background.Fps);
+            _background = FrameSources.Open(_theme.Resolve(path), Width, Height, _theme.Background.Fit, _theme.Background.Fps, _theme.Background.Crop);
         }
         catch (Exception e)
         {
@@ -63,7 +63,11 @@ public sealed partial class ThemeRenderer : IDisposable
 
         g.Clear(ParseColor(_theme.Background.Color));
         if (Background()?.FrameAt(Environment.TickCount64 - _start) is { } bgFrame)
-            DrawFitted(g, bgFrame, new RectangleF(0, 0, Width, Height), _theme.Background.Fit);
+        {
+            if (_theme.Background.Crop is { } crop && !FrameSources.IsVideo(_theme.Resolve(_theme.Background.Image!)))
+                g.DrawImage(bgFrame, new RectangleF(0, 0, Width, Height), crop.Rectangle(bgFrame.Width, bgFrame.Height), GraphicsUnit.Pixel);
+            else DrawFitted(g, bgFrame, new RectangleF(0, 0, Width, Height), _theme.Background.Fit);
+        }
 
         foreach (var w in _theme.Widgets.Where(w => w.Visible))
         {

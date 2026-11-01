@@ -104,13 +104,13 @@ public sealed class DisplayEngine : IDisposable
         {
             _renderer?.Dispose();
             _renderer = new ThemeRenderer(effective, _sensors.Get, _settings.Width, _settings.Height);
-            _wantedVideo = video is null ? null : new VideoRequest(video, bg.Fit, _settings.Rotation);
+            _wantedVideo = video is null ? null : new VideoRequest(video, bg.Fit, _settings.Rotation, bg.Crop);
             _needFull = true;
         }
         _wake.Set();
     }
 
-    private sealed record VideoRequest(string Source, ImageFit Fit, int Rotation);
+    private sealed record VideoRequest(string Source, ImageFit Fit, int Rotation, SquareCrop? Crop);
 
     /// <summary>
     /// The animated background the panel plays by itself, or null. Frames are then rendered without it
@@ -120,7 +120,7 @@ public sealed class DisplayEngine : IDisposable
     {
         get
         {
-            lock (_sync) return _wantedVideo is { } v ? new PreviewMedia(v.Source, v.Fit, _activeVideo == v ? _preparedVideo : null) : null;
+            lock (_sync) return _wantedVideo is { } v ? new PreviewMedia(v.Source, v.Fit, _activeVideo == v ? _preparedVideo : null, v.Crop) : null;
         }
     }
 
@@ -130,9 +130,9 @@ public sealed class DisplayEngine : IDisposable
         var background = s.BackgroundMode switch
         {
             BackgroundMode.Color => new Background { Color = s.BackgroundColor },
-            BackgroundMode.File => new Background { Color = "#000000", Image = s.BackgroundFile, Fit = s.BackgroundFit, Fps = s.VideoFps },
+            BackgroundMode.File => new Background { Color = "#000000", Image = s.BackgroundFile, Fit = s.BackgroundFit, Fps = s.VideoFps, Crop = s.BackgroundCrop },
             BackgroundMode.Gallery when s.GalleryFile.Length > 0 && File.Exists(s.GalleryPath) =>
-                new Background { Color = "#000000", Image = s.GalleryPath, Fit = ImageFit.Cover, Fps = s.VideoFps },
+                new Background { Color = "#000000", Image = s.GalleryPath, Fit = ImageFit.Cover, Fps = s.VideoFps, Crop = s.BackgroundCrop },
             _ => null,
         };
         if (background == null) return theme;
@@ -290,7 +290,7 @@ public sealed class DisplayEngine : IDisposable
         try
         {
             ReportStatus("Preparing video {0}…", Path.GetFileName(wanted.Source));
-            prepared = DeviceVideo.Prepare(wanted.Source, wanted.Fit, wanted.Rotation, _settings.Width, _settings.Height, s => ReportStatus("{0}", s));
+            prepared = DeviceVideo.Prepare(wanted.Source, wanted.Fit, wanted.Rotation, _settings.Width, _settings.Height, s => ReportStatus("{0}", s), wanted.Crop);
         }
         catch (Exception e)
         {
@@ -409,4 +409,4 @@ public sealed class DisplayEngine : IDisposable
 
 /// <param name="Source">The file chosen by the user.</param>
 /// <param name="Prepared">The converted MP4 the panel plays, once it is ready.</param>
-public sealed record PreviewMedia(string Source, ImageFit Fit, string? Prepared);
+public sealed record PreviewMedia(string Source, ImageFit Fit, string? Prepared, SquareCrop? Crop = null);

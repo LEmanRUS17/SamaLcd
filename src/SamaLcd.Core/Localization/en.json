@@ -157,5 +157,18 @@
   " MB": " MB",
   " GB": " GB",
   " rpm": " rpm",
-  "{0}": "{0}"
+  "{0}": "{0}",
+  "Crop / zoom…": "Crop / zoom…",
+  "Square crop": "Square crop",
+  "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.": "Drag to reposition. Zoom to remove black borders. Only the circle is visible on the display.",
+  "Zoom": "Zoom",
+  "Remove crop": "Remove crop",
+  "Cancel": "Cancel",
+  "Apply crop": "Apply crop",
+  "Cannot preview this file": "Cannot preview this file",
+  "Check FFmpeg": "Check FFmpeg",
+  "Checking FFmpeg…": "Checking FFmpeg…",
+  "Downloading FFmpeg…": "Downloading FFmpeg…",
+  "FFmpeg ready": "FFmpeg ready",
+  "FFmpeg setup failed: {0}": "FFmpeg setup failed: {0}"
 }

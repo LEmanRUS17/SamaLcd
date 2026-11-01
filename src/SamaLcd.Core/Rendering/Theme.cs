@@ -51,6 +51,7 @@ public sealed class Background
     /// <summary>PNG/JPG/BMP, animated GIF or a video (MP4, MKV, WEBM, MOV, AVI — decoded with ffmpeg).</summary>
     public string? Image { get; set; }
     public ImageFit Fit { get; set; } = ImageFit.Cover;
+    public SquareCrop? Crop { get; set; }
     /// <summary>Frame rate for video backgrounds.</summary>
     public int Fps { get; set; } = 20;
 }
