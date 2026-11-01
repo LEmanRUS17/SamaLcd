@@ -14,6 +14,15 @@ public static class VideoStoragePolicy
     public const long ReserveBytes = 512 * 1024;
     public static long RequiredBytes(long videoBytes) => checked(videoBytes + ReserveBytes);
 
+    public static SdVideoFile[] SelectSnapshot(SdCardState card, string revision, string? name = null)
+    {
+        if (card.Busy || revision.Length == 0 || revision != card.Revision || card.Files == null)
+            throw new IOException(Localization.Localizer.Get("SD files changed. Please retry and review the new file list."));
+        var files = name == null ? card.Files.ToArray() : card.Files.Where(f => f.Name == name).ToArray();
+        if (files.Length == 0) throw new IOException(Localization.Localizer.Get("SD files changed. Please retry and review the new file list."));
+        return files;
+    }
+
     public static void DeleteApprovedSnapshot(bool approved, SdVideoFile[] files, Func<string,long> size, Action<string> delete)
     {
         if (!approved) throw new OperationCanceledException();

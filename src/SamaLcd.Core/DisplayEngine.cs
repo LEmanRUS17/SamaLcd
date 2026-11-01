@@ -62,14 +62,15 @@ public sealed class DisplayEngine : IDisposable
 
     public void RefreshSdFiles() => QueueSdOperation(false, "");
     public void ClearSdFiles(string revision) => QueueSdOperation(true, revision);
+    public void DeleteSdFile(string revision, string name) => QueueSdOperation(true, revision, name);
 
-    private void QueueSdOperation(bool clear, string revision)
+    private void QueueSdOperation(bool clear, string revision, string? name = null)
     {
         lock (_sync)
         {
             if (SdCard.Busy || PendingCleanup != null) return;
-            if (clear && (revision.Length == 0 || revision != SdCard.Revision || SdCard.Files is not { Length: > 0 })) return;
-            _sdOperation = new(clear, revision, SdCard.Files?.ToArray() ?? []);
+            var files = clear ? VideoStoragePolicy.SelectSnapshot(SdCard, revision, name) : Array.Empty<SdVideoFile>();
+            _sdOperation = new(clear, revision, files);
             SdCard = SdCard with { Busy = true, Error = null };
         }
         SdCardChanged?.Invoke();
@@ -101,7 +102,7 @@ public sealed class DisplayEngine : IDisposable
                         _needFull = true;
                         _device!.TextCommand(LcdCommand.DeleteFile, "/mnt/SDCARD/video/" + name, 500);
                     });
-                ReportStatus("SD videos cleared. Playback is paused.");
+                ReportStatus("SD files deleted. Playback is paused.");
             }
         }
         catch (Exception e) { error = e.Message; }

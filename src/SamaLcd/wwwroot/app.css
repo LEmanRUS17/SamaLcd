@@ -69,4 +69,6 @@ body { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
 .sd-file-list li { display: flex; gap: 12px; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
 .sd-file-list .sd-file-name { overflow-wrap: anywhere; min-width: 0; }
 .sd-file-list .sd-file-size { white-space: nowrap; opacity: .65; }
+.sd-file-list .sd-file-name { flex: 1; }
+.sd-file-list .sd-delete-file { flex-shrink: 0; }
 .crop-canvas { width: min(100%, 480px, max(220px, calc(90dvh - 360px))); aspect-ratio: 1; display: block; touch-action: none; cursor: grab; background: black; margin: auto; }

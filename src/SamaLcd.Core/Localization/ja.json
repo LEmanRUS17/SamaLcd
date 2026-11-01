@@ -200,5 +200,13 @@
   "Refresh to load the SD file list.": "更新すると SD カードのファイル一覧を読み込みます。",
   "{0} files · {1} MiB": "{0} ファイル · {1} MiB",
   "No videos on the SD card.": "SD カードに動画はありません。",
-  "SD videos cleared. Playback is paused.": "SD カードの動画を消去しました。再生は一時停止中です。"
+  "SD videos cleared. Playback is paused.": "SD カードの動画を消去しました。再生は一時停止中です。",
+  "Not applied": "未適用",
+  "Changes stay in preview until you apply them to the display.": "変更はプレビューにのみ表示されます。「画面に適用」を押すと保存・送信されます。",
+  "Discard changes": "変更を破棄",
+  "Apply to display": "画面に適用",
+  "Use crop": "切り抜きを使用",
+  "Delete SD videos?": "SD カードの動画を削除しますか？",
+  "Delete {0}": "{0} を削除",
+  "SD files deleted. Playback is paused.": "SD カードのファイルを削除しました。再生は一時停止中です。"
 }

@@ -27,6 +27,10 @@ sealed class MainForm : Form
     private static readonly string[] GalleryExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif", .. FrameSources.VideoExtensions];
 
     private readonly AppSettings _settings;
+    private ImageSettings _imageDraft;
+    private ThemeRenderer? _draftRenderer;
+    private string? _draftPreviewError;
+    private bool ImageDirty => _imageDraft != ImageSettings.From(_settings);
     private readonly DisplayEngine _engine;
     private readonly SensorHub _sensors;
     private readonly NotifyIcon _tray;
@@ -49,8 +53,7 @@ sealed class MainForm : Form
     private int _cropPreviewVersion;
     private string? _cropSession;
     private double _cropDuration;
-    private string CropPath => _settings.BackgroundMode == BackgroundMode.File ? _settings.BackgroundFile
-        : _settings.BackgroundMode == BackgroundMode.Gallery ? _settings.GalleryPath : "";
+    private string CropPath => _imageDraft.SourcePath(_settings);
 
     public ApplicationContext TrayContext { get; } = new();
 
@@ -60,6 +63,7 @@ sealed class MainForm : Form
     public MainForm(AppSettings settings, DisplayEngine engine, SensorHub sensors)
     {
         _settings = settings;
+        _imageDraft = ImageSettings.From(settings);
         L.Language = settings.Language;
         _engine = engine;
         _sensors = sensors;
@@ -180,6 +184,8 @@ sealed class MainForm : Form
                     break;
                 case "set": Set((string)m!["key"]!, m["value"]); break;
                 case "pickFile": PickBackgroundFile(); break;
+                case "applyImage": ApplyImage(); break;
+                case "discardImage": UpdateImageDraft(ImageSettings.From(_settings)); break;
                 case "editCrop": _ = EditCrop(); break;
                 case "seekCrop":
                     _ = SeekCrop((string?)m!["session"] ?? "", (string?)m["source"] ?? "", (double?)m["seconds"] ?? 0, (int?)m["requestId"] ?? 0);
@@ -188,16 +194,16 @@ sealed class MainForm : Form
                 case "clearSdFiles":
                     if ((bool?)m!["approved"] == true) _engine.ClearSdFiles((string?)m["revision"] ?? "");
                     break;
+                case "deleteSdFile":
+                    if ((bool?)m!["approved"] == true) _engine.DeleteSdFile((string?)m["revision"] ?? "", (string?)m["name"] ?? "");
+                    break;
                 case "sdCleanupDecision":
                     _engine.ResolveCleanup((string?)m!["id"] ?? "", (bool?)m["approved"] ?? false);
                     break;
                 case "installFfmpeg": if (_ffmpegCheck?.IsCompleted != false) _ffmpegCheck = CheckFfmpeg(); break;
                 case "applyCrop":
                     if ((string?)m!["source"] != CropPath) break;
-                    _settings.BackgroundCrop = m["crop"]?.Deserialize<SquareCrop>(Theme.JsonOptions)?.Normalize();
-                    _settings.Save();
-                    _engine.ApplyBackgroundSettings();
-                    PostState();
+                    UpdateImageDraft(_imageDraft with { Crop = m["crop"]?.Deserialize<SquareCrop>(Theme.JsonOptions)?.Normalize() });
                     break;
                 case "layout":
                     _layout = m!["layout"].Deserialize<CustomLayout>(Theme.JsonOptions) ?? _layout;
@@ -240,11 +246,13 @@ sealed class MainForm : Form
         catch (Exception e)
         {
             Post(new { type = "toast", kind = "error", text = e.Message });
+            PostState();
         }
     }
 
     private void Set(string key, JsonNode? value)
     {
+        if (SetImageDraft(key, value)) return;
         switch (key)
         {
             case "language":
@@ -261,42 +269,6 @@ sealed class MainForm : Form
                 _settings.Brightness = Math.Clamp((int)value!, 0, 100);
                 _engine.SetBrightness(_settings.Brightness);
                 break;
-            case "rotation":
-                _settings.Rotation = (int)value!;
-                _engine.ApplyBackgroundSettings(); // a video on the panel is converted for the new angle
-                _engine.Invalidate();
-                break;
-            case "bgMode":
-                var mode = Enum.Parse<BackgroundMode>((string)value!, true);
-                if (mode == BackgroundMode.File && !File.Exists(_settings.BackgroundFile))
-                {
-                    PickBackgroundFile();
-                    return;
-                }
-                if (mode == BackgroundMode.Gallery && !File.Exists(_settings.GalleryPath)) mode = BackgroundMode.Theme;
-                _settings.BackgroundMode = mode;
-                _engine.ApplyBackgroundSettings();
-                break;
-            case "gallery":
-                _settings.BackgroundCrop = null;
-                // an empty name is the tile with the variant's own background
-                _settings.GalleryFile = Path.GetFileName((string?)value ?? "");
-                _settings.BackgroundMode = _settings.GalleryFile.Length > 0 ? BackgroundMode.Gallery : BackgroundMode.Theme;
-                _engine.ApplyBackgroundSettings();
-                break;
-            case "bgColor":
-                _settings.BackgroundColor = (string)value!;
-                _settings.BackgroundMode = BackgroundMode.Color;
-                _engine.ApplyBackgroundSettings();
-                break;
-            case "fit":
-                _settings.BackgroundFit = Enum.Parse<ImageFit>((string)value!, true);
-                _engine.ApplyBackgroundSettings();
-                break;
-            case "onDevice":
-                _settings.PlayVideoOnDevice = (bool)value!;
-                _engine.ApplyBackgroundSettings();
-                break;
             case "paused":
                 SetPaused((bool)value!);
                 return;
@@ -309,6 +281,61 @@ sealed class MainForm : Form
         if (key != "brightness") PostState();
     }
 
+    private bool SetImageDraft(string key, JsonNode? value)
+    {
+        var draft = _imageDraft;
+        switch (key)
+        {
+            case "rotation": draft = draft with { Rotation = (int)value! }; break;
+            case "fit": draft = draft with { Fit = Enum.Parse<ImageFit>((string)value!, true) }; break;
+            case "onDevice": draft = draft with { OnDevice = (bool)value! }; break;
+            case "bgColor": draft = draft with { Color = (string)value!, Mode = BackgroundMode.Color }; break;
+            case "gallery":
+                var file = Path.GetFileName((string?)value ?? "");
+                draft = draft with { GalleryFile = file, Crop = null, Mode = file.Length > 0 ? BackgroundMode.Gallery : BackgroundMode.Theme };
+                break;
+            case "bgMode":
+                var mode = Enum.Parse<BackgroundMode>((string)value!, true);
+                if (mode == BackgroundMode.File && !File.Exists(draft.File)) { PickBackgroundFile(); return true; }
+                if (mode == BackgroundMode.Gallery && !File.Exists(Path.Combine(_settings.ResolvedGalleryDirectory, draft.GalleryFile))) mode = BackgroundMode.Theme;
+                draft = draft with { Mode = mode };
+                break;
+            default: return false;
+        }
+        UpdateImageDraft(draft);
+        return true;
+    }
+
+    private void ResetDraftPreview()
+    {
+        _draftRenderer?.Dispose();
+        _draftRenderer = null;
+        _draftPreviewError = null;
+    }
+
+    private void UpdateImageDraft(ImageSettings draft)
+    {
+        if (draft != _imageDraft) { _cropPreviewVersion++; _cropSession = null; }
+        _imageDraft = draft;
+        ResetDraftPreview();
+        PostState();
+        PostFrame();
+    }
+
+    private void ApplyImage()
+    {
+        if (!ImageDirty) return;
+        if (_imageDraft.Mode is BackgroundMode.File or BackgroundMode.Gallery && !File.Exists(CropPath))
+            throw new IOException(L.Get("Background file not found"));
+        var previous = ImageSettings.From(_settings);
+        _imageDraft.ApplyTo(_settings);
+        try { _settings.Save(); }
+        catch { previous.ApplyTo(_settings); throw; }
+        ResetDraftPreview();
+        _engine.ApplyBackgroundSettings();
+        SetPaused(false);
+    }
+
     private void PostState()
     {
         Post(new
@@ -318,17 +345,18 @@ sealed class MainForm : Form
             themes = _themes.Select(n => new { name = n, title = n, thumb = _thumbs.GetValueOrDefault(n) }),
             customThumb = _thumbs.GetValueOrDefault(CustomLayout.ThemeName),
             gallery = GalleryItems(),
-            galleryFile = _settings.BackgroundMode == BackgroundMode.Gallery ? _settings.GalleryFile : "",
+            galleryFile = _imageDraft.Mode == BackgroundMode.Gallery ? _imageDraft.GalleryFile : "",
             theme = _settings.Theme,
             brightness = _settings.Brightness,
-            rotation = ((_settings.Rotation % 360) + 360) % 360,
-            bgMode = _settings.BackgroundMode,
-            bgColor = _settings.BackgroundColor,
-            bgFileName = File.Exists(_settings.BackgroundFile) ? Path.GetFileName(_settings.BackgroundFile) : "",
-            bgFileKind = BackgroundKind(_settings.BackgroundFile),
-            fit = _settings.BackgroundFit,
-            onDevice = _settings.PlayVideoOnDevice,
-            crop = _settings.BackgroundCrop,
+            rotation = ((_imageDraft.Rotation % 360) + 360) % 360,
+            bgMode = _imageDraft.Mode,
+            bgColor = _imageDraft.Color,
+            bgFileName = File.Exists(_imageDraft.File) ? Path.GetFileName(_imageDraft.File) : "",
+            bgFileKind = BackgroundKind(_imageDraft.File),
+            fit = _imageDraft.Fit,
+            onDevice = _imageDraft.OnDevice,
+            crop = _imageDraft.Crop,
+            imageDirty = ImageDirty,
             canCrop = File.Exists(CropPath),
             ffmpegStatus = _ffmpegStatus,
             pendingCleanup = _engine.PendingCleanup,
@@ -406,6 +434,30 @@ sealed class MainForm : Form
     private void PostFrame()
     {
         if (!_webReady) return;
+        if (ImageDirty)
+        {
+            try
+            {
+                _draftRenderer ??= new ThemeRenderer(DisplayEngine.WithBackground(LoadTheme(_settings.Theme), _imageDraft.PreviewSettings(_settings)), _sensors.Get, _settings.Width, _settings.Height);
+                using var preview = _draftRenderer.Render();
+                preview.RotateFlip((((_imageDraft.Rotation % 360) + 360) % 360) switch
+                {
+                    90 => RotateFlipType.Rotate90FlipNone, 180 => RotateFlipType.Rotate180FlipNone,
+                    270 => RotateFlipType.Rotate270FlipNone, _ => RotateFlipType.RotateNoneFlipNone,
+                });
+                if (_draftRenderer.BackgroundError is { } error && error != _draftPreviewError)
+                {
+                    _draftPreviewError = error;
+                    Post(new { type = "toast", kind = "error", text = error });
+                }
+                Post(new { type = "frame", data = ToDataUrl(preview), media = (Media?)null });
+            }
+            catch (Exception e)
+            {
+                if (e.Message != _draftPreviewError) { _draftPreviewError = e.Message; Post(new { type = "toast", kind = "error", text = e.Message }); }
+            }
+            return;
+        }
         // Over a video played by the panel itself the frame is transparent: the page plays the file underneath.
         var media = _engine.Media is { } m ? MediaOf(m.Prepared ?? m.Source, m.Prepared != null ? ImageFit.Stretch : m.Fit) : null;
         string data;
@@ -539,12 +591,15 @@ sealed class MainForm : Form
     {
         try
         {
+            bool preserveDraft = ImageDirty;
             var theme = LoadTheme(name);
             // A variant built around its own picture (Animation) is pointless over another background, so picking it brings the picture back.
             if (chosen && theme.Background.Image is { Length: > 0 }) _settings.BackgroundMode = BackgroundMode.Theme;
             _engine.SetTheme(theme);
             _settings.Theme = name;
             _settings.Save();
+            if (!preserveDraft) _imageDraft = ImageSettings.From(_settings);
+            ResetDraftPreview();
             foreach (ToolStripMenuItem i in _themesMenu.DropDownItems) i.Checked = Equals(i.Tag, name);
         }
         catch (Exception e)
@@ -563,7 +618,7 @@ sealed class MainForm : Form
             Title = L.Get("Display background"),
             Filter = $"{L.Get("Images, GIFs and videos")}|*.png;*.jpg;*.jpeg;*.bmp;*.gif;{videos}|{L.Get("Videos")}|{videos}|GIF|*.gif|{L.Get("All files")}|*.*",
         };
-        if (File.Exists(_settings.BackgroundFile)) dlg.InitialDirectory = Path.GetDirectoryName(_settings.BackgroundFile);
+        if (File.Exists(_imageDraft.File)) dlg.InitialDirectory = Path.GetDirectoryName(_imageDraft.File);
         if (dlg.ShowDialog(this) == DialogResult.OK)
         {
             if (FrameSources.IsVideo(dlg.FileName) && VideoSource.FindFfmpeg() == null)
@@ -572,11 +627,7 @@ sealed class MainForm : Form
             }
             else
             {
-                _settings.BackgroundFile = dlg.FileName;
-                _settings.BackgroundCrop = null;
-                _settings.BackgroundMode = BackgroundMode.File;
-                _settings.Save();
-                _engine.ApplyBackgroundSettings();
+                UpdateImageDraft(_imageDraft with { File = dlg.FileName, Crop = null, Mode = BackgroundMode.File });
             }
         }
         PostState();
@@ -630,7 +681,7 @@ sealed class MainForm : Form
             if (source != CropPath || version != _cropPreviewVersion) return;
             _cropSession = Guid.NewGuid().ToString("N");
             _cropDuration = duration;
-            Post(new { type = "cropSource", source, url = UrlOf(poster), crop = _settings.BackgroundCrop, session = _cropSession, duration, seconds });
+            Post(new { type = "cropSource", source, url = UrlOf(poster), crop = _imageDraft.Crop, session = _cropSession, duration, seconds });
         }
         catch (Exception ex) { Post(new { type = "toast", kind = "error", text = ex.Message }); }
     }
@@ -712,6 +763,7 @@ sealed class MainForm : Form
     {
         if (disposing)
         {
+            ResetDraftPreview();
             _tray.Dispose();
             _web.Dispose();
             lock (_frameLock) _lastFrame?.Dispose();

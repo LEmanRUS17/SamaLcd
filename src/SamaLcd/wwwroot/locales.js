@@ -202,7 +202,15 @@ globalThis.SamaLcdCatalogs = {
     "Refresh to load the SD file list.": "Refresh to load the SD file list.",
     "{0} files · {1} MiB": "{0} files · {1} MiB",
     "No videos on the SD card.": "No videos on the SD card.",
-    "SD videos cleared. Playback is paused.": "SD videos cleared. Playback is paused."
+    "SD videos cleared. Playback is paused.": "SD videos cleared. Playback is paused.",
+    "Not applied": "Not applied",
+    "Changes stay in preview until you apply them to the display.": "Changes stay in preview until you apply them to the display.",
+    "Discard changes": "Discard changes",
+    "Apply to display": "Apply to display",
+    "Use crop": "Use crop",
+    "Delete SD videos?": "Delete SD videos?",
+    "Delete {0}": "Delete {0}",
+    "SD files deleted. Playback is paused.": "SD files deleted. Playback is paused."
   },
   "zh-Hans": {
     "Water cooling display": "水冷屏幕",
@@ -406,7 +414,15 @@ globalThis.SamaLcdCatalogs = {
     "Refresh to load the SD file list.": "点击刷新读取 SD 卡文件列表。",
     "{0} files · {1} MiB": "{0} 个文件 · {1} MiB",
     "No videos on the SD card.": "SD 卡视频目录为空。",
-    "SD videos cleared. Playback is paused.": "SD 卡视频已清空，播放已暂停。"
+    "SD videos cleared. Playback is paused.": "SD 卡视频已清空，播放已暂停。",
+    "Not applied": "尚未应用",
+    "Changes stay in preview until you apply them to the display.": "修改仅在预览中显示；点击“应用到屏幕”后才会保存并发送。",
+    "Discard changes": "放弃修改",
+    "Apply to display": "应用到屏幕",
+    "Use crop": "采用裁剪",
+    "Delete SD videos?": "删除 SD 卡视频？",
+    "Delete {0}": "删除 {0}",
+    "SD files deleted. Playback is paused.": "SD 卡文件已删除，播放已暂停。"
   },
   "ja": {
     "Water cooling display": "水冷ディスプレイ",
@@ -610,7 +626,15 @@ globalThis.SamaLcdCatalogs = {
     "Refresh to load the SD file list.": "更新すると SD カードのファイル一覧を読み込みます。",
     "{0} files · {1} MiB": "{0} ファイル · {1} MiB",
     "No videos on the SD card.": "SD カードに動画はありません。",
-    "SD videos cleared. Playback is paused.": "SD カードの動画を消去しました。再生は一時停止中です。"
+    "SD videos cleared. Playback is paused.": "SD カードの動画を消去しました。再生は一時停止中です。",
+    "Not applied": "未適用",
+    "Changes stay in preview until you apply them to the display.": "変更はプレビューにのみ表示されます。「画面に適用」を押すと保存・送信されます。",
+    "Discard changes": "変更を破棄",
+    "Apply to display": "画面に適用",
+    "Use crop": "切り抜きを使用",
+    "Delete SD videos?": "SD カードの動画を削除しますか？",
+    "Delete {0}": "{0} を削除",
+    "SD files deleted. Playback is paused.": "SD カードのファイルを削除しました。再生は一時停止中です。"
   },
   "ru": {
     "Water cooling display": "экран водяного охлаждения",
@@ -814,6 +838,14 @@ globalThis.SamaLcdCatalogs = {
     "Refresh to load the SD file list.": "Нажмите «Обновить», чтобы загрузить список файлов SD-карты.",
     "{0} files · {1} MiB": "Файлов: {0} · {1} МиБ",
     "No videos on the SD card.": "На SD-карте нет видео.",
-    "SD videos cleared. Playback is paused.": "Видео с SD-карты удалены. Воспроизведение приостановлено."
+    "SD videos cleared. Playback is paused.": "Видео с SD-карты удалены. Воспроизведение приостановлено.",
+    "Not applied": "Не применено",
+    "Changes stay in preview until you apply them to the display.": "Изменения остаются в предпросмотре. Нажмите «Применить к экрану», чтобы сохранить и отправить их.",
+    "Discard changes": "Отменить изменения",
+    "Apply to display": "Применить к экрану",
+    "Use crop": "Использовать обрезку",
+    "Delete SD videos?": "Удалить видео с SD-карты?",
+    "Delete {0}": "Удалить {0}",
+    "SD files deleted. Playback is paused.": "Файлы SD-карты удалены. Воспроизведение приостановлено."
   }
 };

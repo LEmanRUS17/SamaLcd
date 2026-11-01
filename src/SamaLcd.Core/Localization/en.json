@@ -200,5 +200,13 @@
   "Refresh to load the SD file list.": "Refresh to load the SD file list.",
   "{0} files · {1} MiB": "{0} files · {1} MiB",
   "No videos on the SD card.": "No videos on the SD card.",
-  "SD videos cleared. Playback is paused.": "SD videos cleared. Playback is paused."
+  "SD videos cleared. Playback is paused.": "SD videos cleared. Playback is paused.",
+  "Not applied": "Not applied",
+  "Changes stay in preview until you apply them to the display.": "Changes stay in preview until you apply them to the display.",
+  "Discard changes": "Discard changes",
+  "Apply to display": "Apply to display",
+  "Use crop": "Use crop",
+  "Delete SD videos?": "Delete SD videos?",
+  "Delete {0}": "Delete {0}",
+  "SD files deleted. Playback is paused.": "SD files deleted. Playback is paused."
 }

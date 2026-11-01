@@ -200,5 +200,13 @@
   "Refresh to load the SD file list.": "点击刷新读取 SD 卡文件列表。",
   "{0} files · {1} MiB": "{0} 个文件 · {1} MiB",
   "No videos on the SD card.": "SD 卡视频目录为空。",
-  "SD videos cleared. Playback is paused.": "SD 卡视频已清空，播放已暂停。"
+  "SD videos cleared. Playback is paused.": "SD 卡视频已清空，播放已暂停。",
+  "Not applied": "尚未应用",
+  "Changes stay in preview until you apply them to the display.": "修改仅在预览中显示；点击“应用到屏幕”后才会保存并发送。",
+  "Discard changes": "放弃修改",
+  "Apply to display": "应用到屏幕",
+  "Use crop": "采用裁剪",
+  "Delete SD videos?": "删除 SD 卡视频？",
+  "Delete {0}": "删除 {0}",
+  "SD files deleted. Playback is paused.": "SD 卡文件已删除，播放已暂停。"
 }

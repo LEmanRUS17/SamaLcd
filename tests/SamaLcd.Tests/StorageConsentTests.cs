@@ -3,6 +3,24 @@ using SamaLcd.Core;
 namespace SamaLcd.Tests;
 public class StorageConsentTests
 {
+    [Fact] public void SingleDeletionOnlyTargetsTheSelectedFileFromTheApprovedList()
+    {
+        var card = new SdCardState("snapshot",[new("one.mp4",10),new("two.mp4",20)],false,null);
+        var selected = VideoStoragePolicy.SelectSnapshot(card,"snapshot","two.mp4");
+        var remaining = card.Files!.ToDictionary(f=>f.Name,f=>f.Size);
+        VideoStoragePolicy.DeleteApprovedSnapshot(true,selected,n=>remaining.GetValueOrDefault(n),n=>remaining.Remove(n));
+        Assert.Single(remaining); Assert.Equal(10,remaining["one.mp4"]);
+    }
+    [Theory]
+    [InlineData("old","one.mp4",false)]
+    [InlineData("snapshot","missing.mp4",false)]
+    [InlineData("snapshot","../one.mp4",false)]
+    [InlineData("snapshot","one.mp4",true)]
+    public void SingleDeletionRejectsStaleUnknownOrBusyRequests(string revision,string name,bool busy)
+    {
+        var card = new SdCardState("snapshot",[new("one.mp4",10)],busy,null);
+        Assert.Throws<IOException>(()=>VideoStoragePolicy.SelectSnapshot(card,revision,name));
+    }
     [Fact] public void FullCardStillAllowsConversionBeforeConsent()
     {
         long[] storage=[2688,2688,0,122882,122882,0];

@@ -37,6 +37,7 @@
     <div class="card-body items-center gap-4">
       <div class="flex w-full items-center justify-between">
         <h2 class="card-title text-base"><span data-i18n="On the display">On the display</span></h2>
+        <span id="previewDraftBadge" class="badge badge-warning badge-soft hidden" data-i18n="Not applied">Not applied</span>
         <span id="variantBadge" class="badge badge-primary badge-soft"></span>
       </div>
       <div class="preview-ring">
@@ -131,6 +132,13 @@
               <span class="text-xs opacity-60"><span data-i18n="Uploads the file to the display’s SD card for smooth playback; USB streaming runs at about 4 fps.">Uploads the file to the display’s SD card for smooth playback; USB streaming runs at about 4 fps.</span></span>
             </span>
           </label>
+        </div>
+      </div>
+      <div id="imageApplyBar" class="card bg-base-100 shadow-sm 2xl:col-span-2">
+        <div class="card-body flex-row flex-wrap items-center gap-3">
+          <p class="flex-1 text-sm opacity-70" data-i18n="Changes stay in preview until you apply them to the display.">Changes stay in preview until you apply them to the display.</p>
+          <button id="discardImage" class="btn btn-ghost" disabled data-i18n="Discard changes">Discard changes</button>
+          <button id="applyImage" class="btn btn-primary" disabled data-i18n="Apply to display">Apply to display</button>
         </div>
       </div>
     </section>
@@ -285,7 +293,7 @@
     <div class="modal-action flex-wrap">
       <button id="cropOriginal" class="btn btn-ghost" data-i18n="Remove crop">Remove crop</button>
       <button id="cropCancel" class="btn" data-i18n="Cancel">Cancel</button>
-      <button id="cropApply" class="btn btn-primary" data-i18n="Apply crop">Apply crop</button>
+      <button id="cropApply" class="btn btn-primary" data-i18n="Use crop">Use crop</button>
     </div>
   </div>
 </dialog>
@@ -305,7 +313,7 @@
 
 <dialog id="sdClearDialog" class="modal">
   <div class="modal-box max-w-xl">
-    <h2 class="font-bold text-lg" data-i18n="Clear SD videos?">Clear SD videos?</h2>
+    <h2 class="font-bold text-lg" data-i18n="Delete SD videos?">Delete SD videos?</h2>
     <p class="my-3 text-warning" data-i18n="Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.">Delete the listed videos permanently? Playback will pause. Other SD folders are not changed.</p>
     <p id="sdClearSize" class="text-sm"></p>
     <ul id="sdClearFiles" class="sd-file-list my-3 text-sm select-text"></ul>

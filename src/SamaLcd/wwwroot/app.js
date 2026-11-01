@@ -98,6 +98,9 @@ async function applyState(s) {
   if (revision !== stateRevision) return;
   $('#language').value = I18n.language;
   state = s;
+  $('#applyImage').disabled = !s.imageDirty;
+  $('#discardImage').disabled = !s.imageDirty;
+  $('#previewDraftBadge').classList.toggle('hidden', !s.imageDirty);
   window.showSdCleanup(s.pendingCleanup || null);
   $('#cropBackground').disabled = !s.canCrop;
   $('#ffmpegStatus').textContent = s.ffmpegStatus || '';
@@ -201,6 +204,11 @@ $('#brightness').addEventListener('input', e => {
 $('#paused').onchange = e => set('paused', e.target.checked);
 $('#autostart').onchange = e => set('autostart', e.target.checked);
 $('#onDevice').onchange = e => set('onDevice', e.target.checked);
+$('#applyImage').onclick = () => {
+  $('#applyImage').disabled = true;
+  host.send({cmd:'applyImage'});
+};
+$('#discardImage').onclick = () => host.send({cmd:'discardImage'});
 onJoin($('#rotation'), v => set('rotation', +v));
 onJoin($('#fit'), v => set('fit', v));
 onJoin($('#bgMode'), v => {
@@ -626,6 +634,9 @@ function mockHost() {
     ] },
   };
   const values = { 'cpu.temp': 54, 'gpu.temp': 47.5, 'cpu.load': 23, 'gpu.load': 61, 'ram.load': 38 };
+  const imageKeys = ['rotation','bgMode','bgColor','bgFileName','galleryFile','fit','onDevice','crop'];
+  let appliedImage = Object.fromEntries(imageKeys.map(key => [key, s[key]]));
+  const updateImageDirty = () => { s.imageDirty = imageKeys.some(key => JSON.stringify(s[key]) !== JSON.stringify(appliedImage[key])); };
   const draw = () => {
     const c = document.createElement('canvas');
     c.width = c.height = 480;
@@ -651,7 +662,9 @@ function mockHost() {
       if (m.cmd === 'ready') { listener(structuredClone(s)); draw(); listener({ type: 'status', textKey: 'Connected: {0}', textArgs: ['COM4'], connected: true, device: s.device }); }
       if (m.cmd === 'sensors') listener({ type: 'sensors', aliases: values, list: [{ id: '/amdcpu/0/load/0', name: 'CPU Total', hardware: 'AMD Ryzen 7 7700X', type: 'Load', value: 23 }] });
       if (m.cmd === 'layout') { s.layout = m.layout; draw(); }
-      if (m.cmd === 'set') { s[m.key] = m.value; if (m.key === 'language') I18n.saveLanguage(m.value); if (m.key !== 'brightness') listener(structuredClone(s)); }
+      if (m.cmd === 'set') { s[m.key] = m.value; updateImageDirty(); if (m.key === 'language') I18n.saveLanguage(m.value); if (m.key !== 'brightness') listener(structuredClone(s)); }
+      if (m.cmd === 'applyImage') { appliedImage = Object.fromEntries(imageKeys.map(key => [key, s[key]])); updateImageDirty(); listener(structuredClone(s)); draw(); }
+      if (m.cmd === 'discardImage') { Object.assign(s, appliedImage); updateImageDirty(); listener(structuredClone(s)); draw(); }
     },
     on(f) { listener = f; },
   };

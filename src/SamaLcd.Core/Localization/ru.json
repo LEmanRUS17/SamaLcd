@@ -200,5 +200,13 @@
   "Refresh to load the SD file list.": "Нажмите «Обновить», чтобы загрузить список файлов SD-карты.",
   "{0} files · {1} MiB": "Файлов: {0} · {1} МиБ",
   "No videos on the SD card.": "На SD-карте нет видео.",
-  "SD videos cleared. Playback is paused.": "Видео с SD-карты удалены. Воспроизведение приостановлено."
+  "SD videos cleared. Playback is paused.": "Видео с SD-карты удалены. Воспроизведение приостановлено.",
+  "Not applied": "Не применено",
+  "Changes stay in preview until you apply them to the display.": "Изменения остаются в предпросмотре. Нажмите «Применить к экрану», чтобы сохранить и отправить их.",
+  "Discard changes": "Отменить изменения",
+  "Apply to display": "Применить к экрану",
+  "Use crop": "Использовать обрезку",
+  "Delete SD videos?": "Удалить видео с SD-карты?",
+  "Delete {0}": "Удалить {0}",
+  "SD files deleted. Playback is paused.": "Файлы SD-карты удалены. Воспроизведение приостановлено."
 }
