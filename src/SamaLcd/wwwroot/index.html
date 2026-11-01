@@ -272,8 +272,22 @@
   </div>
 </dialog>
 
+<dialog id="sdCleanupDialog" class="modal">
+  <div class="modal-box max-w-xl">
+    <h2 class="font-bold text-lg" data-i18n="Not enough SD space">Not enough SD space</h2>
+    <p id="sdCleanupSize" class="my-3"></p>
+    <p class="text-warning" data-i18n="Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.">Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.</p>
+    <ul id="sdCleanupFiles" class="my-3 max-h-56 overflow-auto text-sm select-text"></ul>
+    <div class="modal-action">
+      <button id="sdCleanupCancel" class="btn" data-i18n="Cancel and keep files">Cancel and keep files</button>
+      <button id="sdCleanupApprove" class="btn btn-error" data-i18n="Delete listed videos and upload">Delete listed videos and upload</button>
+    </div>
+  </div>
+</dialog>
+
 <script src="locales.js"></script>
 <script src="i18n.js"></script>
+<script src="storage.js"></script>
 <script src="app.js"></script>
 <script src="crop.js"></script>
 </body>

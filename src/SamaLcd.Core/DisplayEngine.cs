@@ -55,21 +55,18 @@ public sealed class DisplayEngine : IDisposable
     public long FramesSent { get; private set; }
     public long BytesSent { get; private set; }
     public long[] Storage { get; private set; } = [];
+    public SdCleanupRequest? PendingCleanup { get; private set; }
+    public event Action<SdCleanupRequest>? CleanupRequested;
+    private TaskCompletionSource<bool>? _cleanupDecision;
+    public void ResolveCleanup(string id, bool approved)
+    {
+        lock (_sync) if (PendingCleanup?.Id == id) _cleanupDecision?.TrySetResult(approved);
+    }
 
-    private long VideoBudget()
+    private long VideoBudget(string source)
     {
         Storage = _device!.StorageInfo();
-        if(Storage.Length != 6) throw new IOException("Invalid storage reply");
-        long best = 0;
-        foreach(var (folder,index) in new[]{("/mnt/SDCARD/video/",5),("/root/video/",2)})
-        {
-            long available=Storage[index]*1024;
-            // Only our own generated files may be reclaimed. Leave vendor/user files untouched.
-            foreach(var file in _device.ListDir(folder).Where(f=>f.StartsWith(DeviceVideo.RemotePrefix,StringComparison.Ordinal)))
-                available += _device.FileSize(folder+file);
-            best=Math.Max(best,available);
-        }
-        return Math.Max(0,best-512*1024);
+        return VideoStoragePolicy.EncodingBudget(Storage, DeviceVideo.Duration(VideoSource.FindFfmpeg() ?? throw new IOException("FFmpeg unavailable"), source));
     }
 
     public DisplayEngine(AppSettings settings, SensorHub sensors)
@@ -187,6 +184,7 @@ public sealed class DisplayEngine : IDisposable
     public void Stop()
     {
         _running = false;
+        _cleanupDecision?.TrySetResult(false);
         _wake.Set();
         _thread?.Join(5000);
         _thread = null;
@@ -251,6 +249,7 @@ public sealed class DisplayEngine : IDisposable
                 _pendingBrightness = -1;
             }
             if (wanted != _activeVideo) SwitchVideo(wanted);
+            lock (_sync) if (Paused || wanted != _wantedVideo) return interval;
             bool overlay = _activeVideo != null;
             if (overlay) interval = Math.Max(interval, 200); // the panel draws the video; widgets need no high rate
 
@@ -307,7 +306,7 @@ public sealed class DisplayEngine : IDisposable
         try
         {
             ReportStatus("Preparing video {0}…", Path.GetFileName(wanted.Source));
-            var budget=VideoBudget();
+            var budget=VideoBudget(wanted.Source);
             if(budget<=0) throw new IOException(L.Get("Video is too long for the available storage. Choose a shorter clip or free space."));
             ReportStatus("Compressing for display storage: at most {0:0.0} MiB",budget/1048576.0);
             prepared = DeviceVideo.Prepare(wanted.Source, wanted.Fit, wanted.Rotation, _settings.Width, _settings.Height, s => ReportStatus("{0}", s), wanted.Crop,budget);
@@ -320,9 +319,18 @@ public sealed class DisplayEngine : IDisposable
         _preparedVideo = prepared.LocalPath;
         try
         {
-            var remote = EnsureUploaded(prepared);
+            lock (_sync) if (!_running || _wantedVideo != wanted) throw new OperationCanceledException();
+            var remote = EnsureUploaded(prepared, wanted);
             _device!.PlayVideo(remote);
             Storage = _device.StorageInfo();
+        }
+        catch (OperationCanceledException)
+        {
+            // Do not retry a declined deletion request or silently switch to USB playback.
+            lock (_sync) if (_wantedVideo == wanted) Paused = true;
+            _activeVideo = null;
+            ReportStatus("Video upload canceled.");
+            return;
         }
         catch (Exception e) when (++_videoFailures < 2)
         {
@@ -351,35 +359,69 @@ public sealed class DisplayEngine : IDisposable
     }
 
     /// <summary>Copies the converted video to the panel unless it is already there; returns its path on the panel.</summary>
-    private string EnsureUploaded(PreparedVideo video)
+    private string EnsureUploaded(PreparedVideo video, VideoRequest wanted)
     {
         var dev = _device!;
-        long[] storage = dev.StorageInfo(); // KB: total, used, free, sdTotal, sdUsed, sdFree
-        long needKb = video.Size / 1024 + 512;
+        long needBytes = VideoStoragePolicy.RequiredBytes(video.Size);
         string[] dirs = ["/mnt/SDCARD/video/", "/root/video/"];
         foreach (var dir in dirs)
         {
             if (dev.FileSize(dir + video.RemoteName) == video.Size) return dir + video.RemoteName;
         }
-        foreach (var (dir, freeKb) in new[] { (dirs[0], storage.ElementAtOrDefault(5)), (dirs[1], storage.ElementAtOrDefault(2)) })
+        Storage = dev.StorageInfo(); // Refresh AFTER conversion; free space may have changed.
+        if (Storage.Length != 6) throw new IOException("Invalid storage reply");
+        string? destination = Storage[5] * 1024 >= needBytes ? dirs[0] : Storage[2] * 1024 >= needBytes ? dirs[1] : null;
+        if (destination == null)
         {
-            // remove videos we uploaded earlier, then check space
-            foreach (var old in dev.ListDir(dir).Where(f => f.StartsWith(DeviceVideo.RemotePrefix, StringComparison.Ordinal)))
-                dev.TextCommand(LcdCommand.DeleteFile, dir + old, 500);
-            storage = dev.StorageInfo();
-            long free = dir == dirs[0] ? storage.ElementAtOrDefault(5) : storage.ElementAtOrDefault(2);
-            if (free < needKb) continue;
-            int lastPct = -1;
-            dev.UploadFile(video.LocalPath, dir + video.RemoteName, p =>
+            var files = dev.ListDir(dirs[0]).Where(n => n is not "." and not ".." && n.IndexOfAny(['/', '\\']) < 0)
+                .Select(n => new SdVideoFile(n, dev.FileSize(dirs[0] + n))).Where(f => f.Size > 0).ToArray();
+            if (files.Length == 0 || Storage[5] * 1024 + files.Sum(f => f.Size) < needBytes)
+                throw new IOException(L.Get("Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually."));
+            var decision = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            lock (_sync)
             {
-                int pct = (int)(p * 100);
-                if (pct / 5 == lastPct / 5) return;
-                lastPct = pct;
-                ReportStatus("Uploading video to display: {0}%", pct);
-            });
-            return dir + video.RemoteName;
+                _cleanupDecision = decision;
+                PendingCleanup = new SdCleanupRequest(Guid.NewGuid().ToString("N"), needBytes, Storage[5] * 1024, files);
+            }
+            try
+            {
+                ReportStatus("Not enough space. Waiting for SD cleanup confirmation…");
+                if (CleanupRequested == null) throw new OperationCanceledException();
+                CleanupRequested.Invoke(PendingCleanup);
+                while (_running && !decision.Task.Wait(200))
+                {
+                    lock (_sync) if (_wantedVideo != wanted) throw new OperationCanceledException();
+                }
+                lock (_sync) if (!_running || _wantedVideo != wanted || !decision.Task.IsCompletedSuccessfully || !decision.Task.Result)
+                    throw new OperationCanceledException();
+                Storage = dev.StorageInfo();
+                if (Storage.Length != 6) throw new IOException("Invalid storage reply");
+                if (Storage[5] * 1024 < needBytes)
+                {
+                    // Approval covers exactly the displayed snapshot, never newly discovered files.
+                    dev.StopPlayback();
+                    VideoStoragePolicy.DeleteApprovedSnapshot(decision.Task.Result, files, name => dev.FileSize(dirs[0] + name), name =>
+                    {
+                        lock (_sync) if (!_running || _wantedVideo != wanted) throw new OperationCanceledException();
+                        dev.TextCommand(LcdCommand.DeleteFile, dirs[0] + name, 500);
+                    });
+                }
+            }
+            finally { lock (_sync) { PendingCleanup = null; _cleanupDecision = null; } }
+            Storage = dev.StorageInfo();
+            if (Storage.Length != 6 || Storage[5] * 1024 < needBytes) throw new IOException(L.Get("SD space is still insufficient after cleanup."));
+            destination = dirs[0];
         }
-        throw new IOException(L.Get("Not enough space on display for video ({0:0.0} MB)", video.Size / 1024 / 1024.0));
+        int lastPct = -1;
+        lock (_sync) if (!_running || _wantedVideo != wanted) throw new OperationCanceledException();
+        dev.UploadFile(video.LocalPath, destination + video.RemoteName, p =>
+        {
+            int pct = (int)(p * 100);
+            if (pct / 5 == lastPct / 5) return;
+            lastPct = pct;
+            ReportStatus("Uploading video to display: {0}%", pct);
+        });
+        return destination + video.RemoteName;
     }
 
     /// <summary>

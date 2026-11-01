@@ -175,5 +175,16 @@
   "Cannot determine video duration.": "Cannot determine video duration.",
   "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Compressed video still exceeds the storage limit. Choose a shorter clip.",
   "Compressing for display storage: at most {0:0.0} MiB": "Compressing for display storage: at most {0:0.0} MiB",
-  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free"
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free",
+  "Not enough SD space": "Not enough SD space",
+  "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.",
+  "Cancel and keep files": "Cancel and keep files",
+  "Delete listed videos and upload": "Delete listed videos and upload",
+  "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.",
+  "Video upload canceled.": "Video upload canceled.",
+  "Not enough space. Waiting for SD cleanup confirmation…": "Not enough space. Waiting for SD cleanup confirmation…",
+  "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.",
+  "SD files changed. Please retry and review the new file list.": "SD files changed. Please retry and review the new file list.",
+  "Could not delete SD file: {0}": "Could not delete SD file: {0}",
+  "SD space is still insufficient after cleanup.": "SD space is still insufficient after cleanup."
 }

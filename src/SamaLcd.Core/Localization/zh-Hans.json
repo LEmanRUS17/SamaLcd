@@ -175,5 +175,16 @@
   "Cannot determine video duration.": "无法读取视频时长。",
   "Compressed video still exceeds the storage limit. Choose a shorter clip.": "压缩后的视频仍超过存储上限，请选择较短片段。",
   "Compressing for display storage: at most {0:0.0} MiB": "正在按屏幕空间压缩：上限 {0:0.0} MiB",
-  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内置可用：{0} / {1} MiB；SD 可用：{2} / {3} MiB"
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内置可用：{0} / {1} MiB；SD 可用：{2} / {3} MiB",
+  "Not enough SD space": "SD 卡空间不足",
+  "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "是否删除以下 SD 卡视频以便上传转码后的视频？删除后无法恢复，其他 SD 文件夹不受影响。",
+  "Cancel and keep files": "取消，保留文件",
+  "Delete listed videos and upload": "删除所列视频并上传",
+  "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "所需空间（含余量）：{0} MiB；当前可用：{1} MiB；所列文件共：{2} MiB。",
+  "Video upload canceled.": "视频上传已取消。",
+  "Not enough space. Waiting for SD cleanup confirmation…": "空间不足，等待确认是否清理 SD 卡视频…",
+  "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "删除 SD 视频仍无法释放足够空间，请选择较短片段或手动管理 SD 卡。",
+  "SD files changed. Please retry and review the new file list.": "SD 文件发生变化，请重试并核对新的文件列表。",
+  "Could not delete SD file: {0}": "无法删除 SD 文件：{0}",
+  "SD space is still insufficient after cleanup.": "清理后 SD 空间仍不足。"
 }

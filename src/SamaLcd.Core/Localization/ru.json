@@ -175,5 +175,16 @@
   "Cannot determine video duration.": "Не удалось определить длительность видео.",
   "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Сжатое видео всё ещё превышает лимит. Выберите более короткий фрагмент.",
   "Compressing for display storage: at most {0:0.0} MiB": "Сжатие под память экрана: не более {0:0.0} МиБ",
-  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Свободно: внутренняя {0} / {1} МиБ; SD {2} / {3} МиБ"
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Свободно: внутренняя {0} / {1} МиБ; SD {2} / {3} МиБ",
+  "Not enough SD space": "Недостаточно места на SD",
+  "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "Удалить перечисленные видео с SD для загрузки нового? Отменить удаление нельзя. Другие папки SD не изменяются.",
+  "Cancel and keep files": "Отмена, сохранить файлы",
+  "Delete listed videos and upload": "Удалить перечисленное и загрузить",
+  "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "Нужно (с резервом): {0} МиБ; свободно: {1} МиБ; файлы: {2} МиБ.",
+  "Video upload canceled.": "Загрузка видео отменена.",
+  "Not enough space. Waiting for SD cleanup confirmation…": "Места недостаточно. Ожидание подтверждения очистки SD…",
+  "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "Удаления видео SD недостаточно. Выберите короткий фрагмент или очистите карту вручную.",
+  "SD files changed. Please retry and review the new file list.": "Файлы SD изменились. Повторите и проверьте новый список.",
+  "Could not delete SD file: {0}": "Не удалось удалить файл SD: {0}",
+  "SD space is still insufficient after cleanup.": "После очистки места на SD всё ещё недостаточно."
 }

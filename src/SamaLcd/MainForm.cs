@@ -92,6 +92,12 @@ sealed class MainForm : Form
             PostStatus();
         });
         _engine.FrameRendered += OnFrame;
+        _ = Handle; // cleanup requests must reach the UI even when started in the tray
+        _engine.CleanupRequested += request => UI(() =>
+        {
+            ShowWindow();
+            Post(new { type = "sdCleanup", request });
+        });
         _ffmpegCheck = CheckFfmpeg();
     }
 
@@ -170,6 +176,9 @@ sealed class MainForm : Form
                 case "set": Set((string)m!["key"]!, m["value"]); break;
                 case "pickFile": PickBackgroundFile(); break;
                 case "editCrop": _ = EditCrop(); break;
+                case "sdCleanupDecision":
+                    _engine.ResolveCleanup((string?)m!["id"] ?? "", (bool?)m["approved"] ?? false);
+                    break;
                 case "installFfmpeg": if (_ffmpegCheck?.IsCompleted != false) _ffmpegCheck = CheckFfmpeg(); break;
                 case "applyCrop":
                     if ((string?)m!["source"] != CropPath) break;
@@ -310,6 +319,7 @@ sealed class MainForm : Form
             crop = _settings.BackgroundCrop,
             canCrop = File.Exists(CropPath),
             ffmpegStatus = _ffmpegStatus,
+            pendingCleanup = _engine.PendingCleanup,
             autostart = SafeAutostartState(),
             paused = _engine.Paused,
             cpuHint = _sensors.CpuSensorsUnavailable,
@@ -334,6 +344,7 @@ sealed class MainForm : Form
             framesSent = _engine.FramesSent,
             megabytesSent = _engine.BytesSent / 1024.0 / 1024,
         storage = _engine.Storage,
+        pendingCleanup = _engine.PendingCleanup,
         });
     }
 

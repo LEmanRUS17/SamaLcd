@@ -175,5 +175,16 @@
   "Cannot determine video duration.": "動画の長さを取得できません。",
   "Compressed video still exceeds the storage limit. Choose a shorter clip.": "圧縮後の動画も容量制限を超えています。短い動画を選んでください。",
   "Compressing for display storage: at most {0:0.0} MiB": "画面の空き容量に合わせて圧縮中：上限 {0:0.0} MiB",
-  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内蔵空き：{0} / {1} MiB、SD空き：{2} / {3} MiB"
+  "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内蔵空き：{0} / {1} MiB、SD空き：{2} / {3} MiB",
+  "Not enough SD space": "SDカードの空き容量不足",
+  "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "変換済み動画を転送するため、以下のSD動画を削除しますか？元に戻せません。他のSDフォルダーは変更しません。",
+  "Cancel and keep files": "キャンセルして保持",
+  "Delete listed videos and upload": "一覧の動画を削除して転送",
+  "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "必要容量（余裕込み）：{0} MiB、空き：{1} MiB、対象ファイル：{2} MiB。",
+  "Video upload canceled.": "動画の転送をキャンセルしました。",
+  "Not enough space. Waiting for SD cleanup confirmation…": "空き容量不足。SD動画の削除確認を待っています…",
+  "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "SD動画を削除しても容量が不足します。短い動画を選ぶかSDカードを手動で整理してください。",
+  "SD files changed. Please retry and review the new file list.": "SDファイルが変更されました。再試行して一覧を確認してください。",
+  "Could not delete SD file: {0}": "SDファイルを削除できません：{0}",
+  "SD space is still insufficient after cleanup.": "削除後もSDの容量が不足しています。"
 }

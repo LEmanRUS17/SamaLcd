@@ -177,7 +177,18 @@ globalThis.SamaLcdCatalogs = {
     "Cannot determine video duration.": "Cannot determine video duration.",
     "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Compressed video still exceeds the storage limit. Choose a shorter clip.",
     "Compressing for display storage: at most {0:0.0} MiB": "Compressing for display storage: at most {0:0.0} MiB",
-    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free"
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free",
+    "Not enough SD space": "Not enough SD space",
+    "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.",
+    "Cancel and keep files": "Cancel and keep files",
+    "Delete listed videos and upload": "Delete listed videos and upload",
+    "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.",
+    "Video upload canceled.": "Video upload canceled.",
+    "Not enough space. Waiting for SD cleanup confirmation…": "Not enough space. Waiting for SD cleanup confirmation…",
+    "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.",
+    "SD files changed. Please retry and review the new file list.": "SD files changed. Please retry and review the new file list.",
+    "Could not delete SD file: {0}": "Could not delete SD file: {0}",
+    "SD space is still insufficient after cleanup.": "SD space is still insufficient after cleanup."
   },
   "zh-Hans": {
     "Water cooling display": "水冷屏幕",
@@ -356,7 +367,18 @@ globalThis.SamaLcdCatalogs = {
     "Cannot determine video duration.": "无法读取视频时长。",
     "Compressed video still exceeds the storage limit. Choose a shorter clip.": "压缩后的视频仍超过存储上限，请选择较短片段。",
     "Compressing for display storage: at most {0:0.0} MiB": "正在按屏幕空间压缩：上限 {0:0.0} MiB",
-    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内置可用：{0} / {1} MiB；SD 可用：{2} / {3} MiB"
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内置可用：{0} / {1} MiB；SD 可用：{2} / {3} MiB",
+    "Not enough SD space": "SD 卡空间不足",
+    "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "是否删除以下 SD 卡视频以便上传转码后的视频？删除后无法恢复，其他 SD 文件夹不受影响。",
+    "Cancel and keep files": "取消，保留文件",
+    "Delete listed videos and upload": "删除所列视频并上传",
+    "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "所需空间（含余量）：{0} MiB；当前可用：{1} MiB；所列文件共：{2} MiB。",
+    "Video upload canceled.": "视频上传已取消。",
+    "Not enough space. Waiting for SD cleanup confirmation…": "空间不足，等待确认是否清理 SD 卡视频…",
+    "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "删除 SD 视频仍无法释放足够空间，请选择较短片段或手动管理 SD 卡。",
+    "SD files changed. Please retry and review the new file list.": "SD 文件发生变化，请重试并核对新的文件列表。",
+    "Could not delete SD file: {0}": "无法删除 SD 文件：{0}",
+    "SD space is still insufficient after cleanup.": "清理后 SD 空间仍不足。"
   },
   "ja": {
     "Water cooling display": "水冷ディスプレイ",
@@ -535,7 +557,18 @@ globalThis.SamaLcdCatalogs = {
     "Cannot determine video duration.": "動画の長さを取得できません。",
     "Compressed video still exceeds the storage limit. Choose a shorter clip.": "圧縮後の動画も容量制限を超えています。短い動画を選んでください。",
     "Compressing for display storage: at most {0:0.0} MiB": "画面の空き容量に合わせて圧縮中：上限 {0:0.0} MiB",
-    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内蔵空き：{0} / {1} MiB、SD空き：{2} / {3} MiB"
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "内蔵空き：{0} / {1} MiB、SD空き：{2} / {3} MiB",
+    "Not enough SD space": "SDカードの空き容量不足",
+    "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "変換済み動画を転送するため、以下のSD動画を削除しますか？元に戻せません。他のSDフォルダーは変更しません。",
+    "Cancel and keep files": "キャンセルして保持",
+    "Delete listed videos and upload": "一覧の動画を削除して転送",
+    "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "必要容量（余裕込み）：{0} MiB、空き：{1} MiB、対象ファイル：{2} MiB。",
+    "Video upload canceled.": "動画の転送をキャンセルしました。",
+    "Not enough space. Waiting for SD cleanup confirmation…": "空き容量不足。SD動画の削除確認を待っています…",
+    "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "SD動画を削除しても容量が不足します。短い動画を選ぶかSDカードを手動で整理してください。",
+    "SD files changed. Please retry and review the new file list.": "SDファイルが変更されました。再試行して一覧を確認してください。",
+    "Could not delete SD file: {0}": "SDファイルを削除できません：{0}",
+    "SD space is still insufficient after cleanup.": "削除後もSDの容量が不足しています。"
   },
   "ru": {
     "Water cooling display": "экран водяного охлаждения",
@@ -714,6 +747,17 @@ globalThis.SamaLcdCatalogs = {
     "Cannot determine video duration.": "Не удалось определить длительность видео.",
     "Compressed video still exceeds the storage limit. Choose a shorter clip.": "Сжатое видео всё ещё превышает лимит. Выберите более короткий фрагмент.",
     "Compressing for display storage: at most {0:0.0} MiB": "Сжатие под память экрана: не более {0:0.0} МиБ",
-    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Свободно: внутренняя {0} / {1} МиБ; SD {2} / {3} МиБ"
+    "Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free": "Свободно: внутренняя {0} / {1} МиБ; SD {2} / {3} МиБ",
+    "Not enough SD space": "Недостаточно места на SD",
+    "Delete the following SD videos to upload the converted video? This cannot be undone. Other SD folders are not changed.": "Удалить перечисленные видео с SD для загрузки нового? Отменить удаление нельзя. Другие папки SD не изменяются.",
+    "Cancel and keep files": "Отмена, сохранить файлы",
+    "Delete listed videos and upload": "Удалить перечисленное и загрузить",
+    "Required (including reserve): {0} MiB; free: {1} MiB; listed files: {2} MiB.": "Нужно (с резервом): {0} МиБ; свободно: {1} МиБ; файлы: {2} МиБ.",
+    "Video upload canceled.": "Загрузка видео отменена.",
+    "Not enough space. Waiting for SD cleanup confirmation…": "Места недостаточно. Ожидание подтверждения очистки SD…",
+    "Deleting SD videos cannot free enough space. Choose a shorter clip or manage the SD card manually.": "Удаления видео SD недостаточно. Выберите короткий фрагмент или очистите карту вручную.",
+    "SD files changed. Please retry and review the new file list.": "Файлы SD изменились. Повторите и проверьте новый список.",
+    "Could not delete SD file: {0}": "Не удалось удалить файл SD: {0}",
+    "SD space is still insufficient after cleanup.": "После очистки места на SD всё ещё недостаточно."
   }
 };

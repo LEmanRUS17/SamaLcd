@@ -97,6 +97,7 @@ async function applyState(s) {
   if (revision !== stateRevision) return;
   $('#language').value = I18n.language;
   state = s;
+  window.showSdCleanup(s.pendingCleanup || null);
   $('#cropBackground').disabled = !s.canCrop;
   $('#ffmpegStatus').textContent = s.ffmpegStatus || '';
   const custom = s.theme === CUSTOM;
@@ -148,6 +149,8 @@ $('#variants').addEventListener('click', e => {
 
 let lastStatus = null;
 function renderStatus(m) {
+  if ('pendingCleanup' in m) window.showSdCleanup(m.pendingCleanup);
+  if (typeof m.paused === 'boolean') $('#paused').checked = m.paused;
   if (m.storage?.length === 6) $('#storageInfo').textContent = tr('Internal: {0} / {1} MiB free; SD: {2} / {3} MiB free', ...( [2,0,5,3].map(i => (m.storage[i]/1024).toFixed(1)) ));
   $('#status').textContent = m.textKey ? tr(m.textKey, ...(m.textArgs || [])) : m.text;
   const c = $('#conn');
@@ -164,6 +167,7 @@ host.on(m => {
   switch (m.type) {
     case 'state': applyState(m); break;
     case 'cropSource': window.openCropEditor(m); break;
+    case 'sdCleanup': window.showSdCleanup(m.request); break;
     case 'frame':
       $('#preview').src = m.data;
       $('#canvasImg').src = m.data;
