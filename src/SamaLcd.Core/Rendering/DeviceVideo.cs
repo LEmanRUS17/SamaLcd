@@ -27,14 +27,21 @@ public static class DeviceVideo
 
     public static double Duration(string ffmpeg, string source)
     {
-        var psi = new ProcessStartInfo(ffmpeg) { UseShellExecute=false, CreateNoWindow=true, RedirectStandardError=true };
-        foreach(var a in new[]{"-hide_banner","-i",source}) psi.ArgumentList.Add(a);
-        using var p=Process.Start(psi)!;
-        var text=p.StandardError.ReadToEndAsync();
-        if(!p.WaitForExit(30000)) {p.Kill(true);throw new TimeoutException("Video metadata timeout");}
-        var m=Regex.Match(text.GetAwaiter().GetResult(), @"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)");
-        if(!m.Success) throw new IOException(L.Get("Cannot determine video duration."));
-        return double.Parse(m.Groups[1].Value,CultureInfo.InvariantCulture)*3600+double.Parse(m.Groups[2].Value,CultureInfo.InvariantCulture)*60+double.Parse(m.Groups[3].Value,CultureInfo.InvariantCulture);
+        using var operation = AppLog.Operation("ffmpeg.metadata", new { file = Path.GetFileName(source) });
+        try
+        {
+            var psi = new ProcessStartInfo(ffmpeg) { UseShellExecute=false, CreateNoWindow=true, RedirectStandardError=true };
+            foreach(var a in new[]{"-hide_banner","-i",source}) psi.ArgumentList.Add(a);
+            using var p=Process.Start(psi)!;
+            var text=p.StandardError.ReadToEndAsync();
+            if(!p.WaitForExit(30000)) {p.Kill(true);throw new TimeoutException("Video metadata timeout");}
+            var m=Regex.Match(text.GetAwaiter().GetResult(), @"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)");
+            if(!m.Success) throw new IOException(L.Get("Cannot determine video duration."));
+            var duration = double.Parse(m.Groups[1].Value,CultureInfo.InvariantCulture)*3600+double.Parse(m.Groups[2].Value,CultureInfo.InvariantCulture)*60+double.Parse(m.Groups[3].Value,CultureInfo.InvariantCulture);
+            AppLog.Info("ffmpeg.duration", new { duration, exitCode = p.ExitCode });
+            return duration;
+        }
+        catch (Exception e) { operation.Fail(e); throw; }
     }
     public const string RemotePrefix = "samalcd_";
 
@@ -70,6 +77,7 @@ public static class DeviceVideo
         if (!info.Exists) throw new FileNotFoundException(L.Get("Background file not found"), source);
 
         int bitrate = maximumBytes.HasValue ? TargetBitrate(maximumBytes.Value, Duration(ffmpeg,source)) : 2400;
+        AppLog.Info("video.prepare", new { file = info.Name, fit, rotation, width, height, crop, maximumBytes, bitrate });
         var key = $"{info.FullName}|{info.Length}|{info.LastWriteTimeUtc.Ticks}|{fit}|{rotation}|{width}x{height}|{crop?.Normalize()}|budget-v1|{bitrate}";
         var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(key)))[..10].ToLowerInvariant();
         Directory.CreateDirectory(CacheDirectory);
@@ -121,19 +129,27 @@ public static class DeviceVideo
 
     private static void Run(string exe, string[] args, int timeoutMs = 10 * 60_000)
     {
-        var psi = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true };
-        foreach (var a in args) psi.ArgumentList.Add(a);
-        using var p = Process.Start(psi)!;
-        var err = p.StandardError.ReadToEndAsync();
-        if (!p.WaitForExit(timeoutMs))
+        using var operation = AppLog.Operation("ffmpeg.run", new { timeoutMs });
+        AppLog.Debug("ffmpeg.arguments", new { exe, args });
+        try
         {
-            p.Kill();
-            throw new TimeoutException(L.Get("ffmpeg took too long"));
+            var psi = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true };
+            foreach (var a in args) psi.ArgumentList.Add(a);
+            using var p = Process.Start(psi)!;
+            var err = p.StandardError.ReadToEndAsync();
+            if (!p.WaitForExit(timeoutMs))
+            {
+                p.Kill(true);
+                throw new TimeoutException(L.Get("ffmpeg took too long"));
+            }
+            if (p.ExitCode != 0)
+            {
+                AppLog.Current?.Write("ERROR", "ffmpeg.exit", new { code = p.ExitCode, stderr = DiagnosticLog.Clip(err.GetAwaiter().GetResult(), 8192) });
+                var lines = err.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                throw new IOException(L.Get("ffmpeg failed: {0}", lines.LastOrDefault()?.Trim() ?? ""));
+            }
+            AppLog.Debug("ffmpeg.exit", new { code = p.ExitCode });
         }
-        if (p.ExitCode != 0)
-        {
-            var lines = err.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            throw new IOException(L.Get("ffmpeg failed: {0}", lines.LastOrDefault()?.Trim() ?? ""));
-        }
+        catch (Exception e) { operation.Fail(e); throw; }
     }
 }

@@ -208,5 +208,14 @@
   "Use crop": "Использовать обрезку",
   "Delete SD videos?": "Удалить видео с SD-карты?",
   "Delete {0}": "Удалить {0}",
-  "SD files deleted. Playback is paused.": "Файлы SD-карты удалены. Воспроизведение приостановлено."
+  "SD files deleted. Playback is paused.": "Файлы SD-карты удалены. Воспроизведение приостановлено.",
+  "Diagnostics": "Диагностика",
+  "Debug logs": "Отладочные логи",
+  "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.": "Основные действия и ошибки записываются всегда. Включите отладку для подробных событий интерфейса, видео и USB.",
+  "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.": "Логи хранятся только на этом ПК и автоматически ротируются. Экспорт содержит имена файлов и диагностику, без самих изображений и видео.",
+  "Open log folder": "Открыть папку логов",
+  "Export diagnostic logs": "Экспортировать диагностику",
+  "Diagnostic logs exported.": "Диагностика экспортирована.",
+  "Could not export logs: {0}": "Не удалось экспортировать логи: {0}",
+  "An unexpected error occurred. Logs were saved in:\n{0}": "Произошла непредвиденная ошибка. Логи сохранены в:\n{0}"
 }

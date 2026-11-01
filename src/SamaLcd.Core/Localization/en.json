@@ -208,5 +208,14 @@
   "Use crop": "Use crop",
   "Delete SD videos?": "Delete SD videos?",
   "Delete {0}": "Delete {0}",
-  "SD files deleted. Playback is paused.": "SD files deleted. Playback is paused."
+  "SD files deleted. Playback is paused.": "SD files deleted. Playback is paused.",
+  "Diagnostics": "Diagnostics",
+  "Debug logs": "Debug logs",
+  "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.": "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.",
+  "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.": "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.",
+  "Open log folder": "Open log folder",
+  "Export diagnostic logs": "Export diagnostic logs",
+  "Diagnostic logs exported.": "Diagnostic logs exported.",
+  "Could not export logs: {0}": "Could not export logs: {0}",
+  "An unexpected error occurred. Logs were saved in:\n{0}": "An unexpected error occurred. Logs were saved in:\n{0}"
 }

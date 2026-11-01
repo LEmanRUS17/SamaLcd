@@ -210,7 +210,16 @@ globalThis.SamaLcdCatalogs = {
     "Use crop": "Use crop",
     "Delete SD videos?": "Delete SD videos?",
     "Delete {0}": "Delete {0}",
-    "SD files deleted. Playback is paused.": "SD files deleted. Playback is paused."
+    "SD files deleted. Playback is paused.": "SD files deleted. Playback is paused.",
+    "Diagnostics": "Diagnostics",
+    "Debug logs": "Debug logs",
+    "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.": "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.",
+    "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.": "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.",
+    "Open log folder": "Open log folder",
+    "Export diagnostic logs": "Export diagnostic logs",
+    "Diagnostic logs exported.": "Diagnostic logs exported.",
+    "Could not export logs: {0}": "Could not export logs: {0}",
+    "An unexpected error occurred. Logs were saved in:\n{0}": "An unexpected error occurred. Logs were saved in:\n{0}"
   },
   "zh-Hans": {
     "Water cooling display": "水冷屏幕",
@@ -422,7 +431,16 @@ globalThis.SamaLcdCatalogs = {
     "Use crop": "采用裁剪",
     "Delete SD videos?": "删除 SD 卡视频？",
     "Delete {0}": "删除 {0}",
-    "SD files deleted. Playback is paused.": "SD 卡文件已删除，播放已暂停。"
+    "SD files deleted. Playback is paused.": "SD 卡文件已删除，播放已暂停。",
+    "Diagnostics": "诊断日志",
+    "Debug logs": "Debug 日志",
+    "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.": "始终记录基本操作和错误。开启 Debug 后，会额外记录界面、视频和 USB 通讯的详细过程。",
+    "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.": "日志仅保存在本机，并自动限制占用空间。导出内容包含文件名和诊断信息，不包含图片或视频本身。",
+    "Open log folder": "打开日志文件夹",
+    "Export diagnostic logs": "导出诊断日志",
+    "Diagnostic logs exported.": "诊断日志已导出。",
+    "Could not export logs: {0}": "无法导出日志：{0}",
+    "An unexpected error occurred. Logs were saved in:\n{0}": "程序发生异常，日志已保存在：\n{0}"
   },
   "ja": {
     "Water cooling display": "水冷ディスプレイ",
@@ -634,7 +652,16 @@ globalThis.SamaLcdCatalogs = {
     "Use crop": "切り抜きを使用",
     "Delete SD videos?": "SD カードの動画を削除しますか？",
     "Delete {0}": "{0} を削除",
-    "SD files deleted. Playback is paused.": "SD カードのファイルを削除しました。再生は一時停止中です。"
+    "SD files deleted. Playback is paused.": "SD カードのファイルを削除しました。再生は一時停止中です。",
+    "Diagnostics": "診断ログ",
+    "Debug logs": "デバッグログ",
+    "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.": "基本操作とエラーは常に記録されます。デバッグを有効にすると、画面・動画・USB 通信の詳細も記録されます。",
+    "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.": "ログはこの PC にのみ保存され、自動的に世代管理されます。エクスポートにはファイル名と診断情報が含まれますが、画像・動画本体は含まれません。",
+    "Open log folder": "ログフォルダーを開く",
+    "Export diagnostic logs": "診断ログをエクスポート",
+    "Diagnostic logs exported.": "診断ログをエクスポートしました。",
+    "Could not export logs: {0}": "ログをエクスポートできませんでした：{0}",
+    "An unexpected error occurred. Logs were saved in:\n{0}": "予期しないエラーが発生しました。ログの保存先：\n{0}"
   },
   "ru": {
     "Water cooling display": "экран водяного охлаждения",
@@ -846,6 +873,15 @@ globalThis.SamaLcdCatalogs = {
     "Use crop": "Использовать обрезку",
     "Delete SD videos?": "Удалить видео с SD-карты?",
     "Delete {0}": "Удалить {0}",
-    "SD files deleted. Playback is paused.": "Файлы SD-карты удалены. Воспроизведение приостановлено."
+    "SD files deleted. Playback is paused.": "Файлы SD-карты удалены. Воспроизведение приостановлено.",
+    "Diagnostics": "Диагностика",
+    "Debug logs": "Отладочные логи",
+    "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.": "Основные действия и ошибки записываются всегда. Включите отладку для подробных событий интерфейса, видео и USB.",
+    "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.": "Логи хранятся только на этом ПК и автоматически ротируются. Экспорт содержит имена файлов и диагностику, без самих изображений и видео.",
+    "Open log folder": "Открыть папку логов",
+    "Export diagnostic logs": "Экспортировать диагностику",
+    "Diagnostic logs exported.": "Диагностика экспортирована.",
+    "Could not export logs: {0}": "Не удалось экспортировать логи: {0}",
+    "An unexpected error occurred. Logs were saved in:\n{0}": "Произошла непредвиденная ошибка. Логи сохранены в:\n{0}"
   }
 };

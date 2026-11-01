@@ -208,5 +208,14 @@
   "Use crop": "采用裁剪",
   "Delete SD videos?": "删除 SD 卡视频？",
   "Delete {0}": "删除 {0}",
-  "SD files deleted. Playback is paused.": "SD 卡文件已删除，播放已暂停。"
+  "SD files deleted. Playback is paused.": "SD 卡文件已删除，播放已暂停。",
+  "Diagnostics": "诊断日志",
+  "Debug logs": "Debug 日志",
+  "Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.": "始终记录基本操作和错误。开启 Debug 后，会额外记录界面、视频和 USB 通讯的详细过程。",
+  "Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.": "日志仅保存在本机，并自动限制占用空间。导出内容包含文件名和诊断信息，不包含图片或视频本身。",
+  "Open log folder": "打开日志文件夹",
+  "Export diagnostic logs": "导出诊断日志",
+  "Diagnostic logs exported.": "诊断日志已导出。",
+  "Could not export logs: {0}": "无法导出日志：{0}",
+  "An unexpected error occurred. Logs were saved in:\n{0}": "程序发生异常，日志已保存在：\n{0}"
 }

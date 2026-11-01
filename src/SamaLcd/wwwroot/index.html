@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SAMA LCD</title>
+  <script src="diagnostics.js"></script>
   <link href="lib/daisyui.css" rel="stylesheet">
   <script src="lib/tailwind.js"></script>
   <link href="app.css" rel="stylesheet">
@@ -269,6 +270,23 @@
           <div id="sdFilesSummary" class="text-sm opacity-70" aria-live="polite"></div>
           <div id="sdFilesError" class="text-sm text-error" role="alert"></div>
           <ul id="sdFilesList" class="sd-file-list text-sm select-text"></ul>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-sm xl:col-span-2">
+        <div class="card-body">
+          <h2 class="card-title" data-i18n="Diagnostics">Diagnostics</h2>
+          <label class="label cursor-pointer justify-start gap-3">
+            <input id="debugLogs" type="checkbox" class="toggle toggle-primary">
+            <span data-i18n="Debug logs">Debug logs</span>
+          </label>
+          <p class="text-sm opacity-70" data-i18n="Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.">Basic operations and errors are always logged. Enable Debug for detailed interface, video and USB traces.</p>
+          <p class="text-xs opacity-60" data-i18n="Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.">Logs stay on this PC and rotate automatically. Export includes file names and diagnostic details, without your images or videos.</p>
+          <div id="logsPath" class="text-xs font-mono opacity-70 break-all select-text"></div>
+          <div id="logsError" class="text-sm text-error" role="alert"></div>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <button id="openLogs" class="btn btn-sm btn-ghost" data-i18n="Open log folder">Open log folder</button>
+            <button id="exportDiagnostics" class="btn btn-sm btn-primary btn-soft" data-i18n="Export diagnostic logs">Export diagnostic logs</button>
+          </div>
         </div>
       </div>
     </section>

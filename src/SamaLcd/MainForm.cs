@@ -45,6 +45,11 @@ sealed class MainForm : Form
     private List<string> _themes = [];
     private Dictionary<string, Thumb> _thumbs = [];
     private bool _webReady;
+    private int _frameQueued;
+    private long _lastMetrics;
+    private bool _fileDialogOpen;
+    private bool _exportingDiagnostics;
+    private CoreWebView2Environment? _webEnvironment;
     private bool _exiting;
     private string _status = "";
     private string _ffmpegStatus = "";
@@ -100,6 +105,7 @@ sealed class MainForm : Form
             PostStatus();
         });
         _engine.FrameRendered += OnFrame;
+        _engine.Log += s => AppLog.Debug("device.message", new { text = DiagnosticLog.Clip(s) });
         _engine.SdCardChanged += () => UI(PostStatus);
         _ = Handle; // cleanup requests must reach the UI even when started in the tray
         _engine.CleanupRequested += request => UI(() =>
@@ -116,34 +122,45 @@ sealed class MainForm : Form
     {
         base.OnShown(e);
         UseDarkTitleBar(true);
+        using var operation = AppLog.Operation("webview.initialize");
         try
         {
             var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SamaLcd", "WebView2");
             var env = await CoreWebView2Environment.CreateAsync(null, dataDir);
+            _webEnvironment = env;
+            AppLog.Info("webview.runtime", new { version = env.BrowserVersionString });
+            env.BrowserProcessExited += (_, args) => AppLog.Info("webview.browser_exited", new { kind = args.BrowserProcessExitKind.ToString(), args.BrowserProcessId, expected = _exiting || IsDisposed });
             await _web.EnsureCoreWebView2Async(env);
+            var core = _web.CoreWebView2;
+            core.ProcessFailed += (_, args) =>
+            {
+                AppLog.Current?.Write("ERROR", "webview.process_failed", new { kind = args.ProcessFailedKind.ToString(), reason = args.Reason.ToString(), args.ExitCode, args.ProcessDescription });
+                if (args.ProcessFailedKind is CoreWebView2ProcessFailedKind.BrowserProcessExited or CoreWebView2ProcessFailedKind.RenderProcessExited) _webReady = false;
+            };
+            core.Settings.AreDefaultContextMenusEnabled = Debugger.IsAttached;
+            core.Settings.AreDevToolsEnabled = Debugger.IsAttached;
+            core.Settings.IsStatusBarEnabled = false;
+            core.Settings.IsZoomControlEnabled = false;
+            _web.DefaultBackgroundColor = BackColor;
+            core.SetVirtualHostNameToFolderMapping(HostName, Path.Combine(AppContext.BaseDirectory, "wwwroot"), CoreWebView2HostResourceAccessKind.Allow);
+            Directory.CreateDirectory(_settings.ResolvedGalleryDirectory);
+            core.SetVirtualHostNameToFolderMapping(GalleryHost, _settings.ResolvedGalleryDirectory, CoreWebView2HostResourceAccessKind.Allow);
+            if (Directory.Exists(_settings.ResolvedThemesDirectory))
+                core.SetVirtualHostNameToFolderMapping(ThemesHost, _settings.ResolvedThemesDirectory, CoreWebView2HostResourceAccessKind.Allow);
+            foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady))
+                core.SetVirtualHostNameToFolderMapping(DriveHost(drive.RootDirectory.FullName), drive.RootDirectory.FullName, CoreWebView2HostResourceAccessKind.Allow);
+            core.WebMessageReceived += (_, a) =>
+            {
+                var message = a.WebMessageAsJson;
+                // Modal dialogs must run after the WebView2 callback returns (no nested message loop).
+                UI(() => OnMessage(message));
+            };
+            core.NavigationStarting += (_, a) => { _webReady = false; AppLog.Debug("webview.navigation_start", new { a.Uri }); };
+            core.NavigationCompleted += (_, a) => AppLog.Info("webview.navigation_end", new { a.IsSuccess, error = a.WebErrorStatus.ToString() });
+            var tab = ScreenshotPath?.Split('#') is [_, var t] ? "#" + t : "";
+            core.Navigate($"https://{HostName}/index.html{tab}");
         }
-        catch (Exception ex)
-        {
-            ShowWebViewMissing(ex);
-            return;
-        }
-        var core = _web.CoreWebView2;
-        core.Settings.AreDefaultContextMenusEnabled = Debugger.IsAttached;
-        core.Settings.AreDevToolsEnabled = Debugger.IsAttached;
-        core.Settings.IsStatusBarEnabled = false;
-        core.Settings.IsZoomControlEnabled = false;
-        _web.DefaultBackgroundColor = BackColor;
-        core.SetVirtualHostNameToFolderMapping(HostName, Path.Combine(AppContext.BaseDirectory, "wwwroot"), CoreWebView2HostResourceAccessKind.Allow);
-        Directory.CreateDirectory(_settings.ResolvedGalleryDirectory);
-        core.SetVirtualHostNameToFolderMapping(GalleryHost, _settings.ResolvedGalleryDirectory, CoreWebView2HostResourceAccessKind.Allow);
-        if (Directory.Exists(_settings.ResolvedThemesDirectory))
-            core.SetVirtualHostNameToFolderMapping(ThemesHost, _settings.ResolvedThemesDirectory, CoreWebView2HostResourceAccessKind.Allow);
-        foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady))
-            core.SetVirtualHostNameToFolderMapping(DriveHost(drive.RootDirectory.FullName), drive.RootDirectory.FullName, CoreWebView2HostResourceAccessKind.Allow);
-        core.WebMessageReceived += (_, a) => OnMessage(a.WebMessageAsJson);
-        core.NavigationStarting += (_, _) => _webReady = false;
-        var tab = ScreenshotPath?.Split('#') is [_, var t] ? "#" + t : "";
-        core.Navigate($"https://{HostName}/index.html{tab}");
+        catch (Exception ex) { operation.Fail(ex); ShowWebViewMissing(ex); }
     }
 
     private void ShowWebViewMissing(Exception ex)
@@ -162,14 +179,20 @@ sealed class MainForm : Form
     private void Post(object message)
     {
         if (!_webReady || _web.CoreWebView2 == null) return;
-        _web.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(message, Theme.JsonOptions));
+        try { _web.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(message, Theme.JsonOptions)); }
+        catch (Exception e) { _webReady = false; AppLog.Error("webview.post_message", e); }
     }
 
     private void OnMessage(string json)
     {
         JsonNode? m;
         try { m = JsonNode.Parse(json); }
-        catch (JsonException) { return; }
+        catch (JsonException e) { AppLog.Error("ui.invalid_message", e); return; }
+        var command = (string?)m?["cmd"];
+        var summary = new { command, key = (string?)m?["key"], value = DiagnosticLog.Clip(m?["value"]?.ToJsonString(), 256), requestId = (int?)m?["requestId"], name = DiagnosticLog.Clip((string?)m?["name"], 512), approved = (bool?)m?["approved"], revision = (string?)m?["revision"], crop = DiagnosticLog.Clip(m?["crop"]?.ToJsonString(), 256) };
+        using var operation = command is not ("sensors" or "uiError" or "uiTrace" or "layout" or "seekCrop") && !(command == "set" && (string?)m?["key"] == "brightness")
+            ? AppLog.Operation("ui.command", summary) : null;
+        if (command is "layout" or "seekCrop" || command == "set" && (string?)m?["key"] == "brightness") AppLog.Debug("ui.command", summary);
         try
         {
             switch ((string?)m?["cmd"])
@@ -183,6 +206,16 @@ sealed class MainForm : Form
                     if (ScreenshotPath != null) _ = SaveScreenshot();
                     break;
                 case "set": Set((string)m!["key"]!, m["value"]); break;
+                case "uiError":
+                    AppLog.Current?.Write("ERROR", "ui.javascript", new { message = DiagnosticLog.Clip((string?)m!["message"], 4096), stack = DiagnosticLog.Clip((string?)m["stack"], 8192), context = DiagnosticLog.Clip((string?)m["context"], 512) });
+                    break;
+                case "uiTrace":
+                    AppLog.Debug("ui.interaction", new { action = DiagnosticLog.Clip((string?)m!["action"], 80), control = DiagnosticLog.Clip((string?)m["control"], 128), value = DiagnosticLog.Clip((string?)m["value"], 256), page = DiagnosticLog.Clip((string?)m["page"], 80) });
+                    break;
+                case "openLogs":
+                    if (AppLog.Current is { } logs) { Directory.CreateDirectory(logs.DirectoryPath); Process.Start(new ProcessStartInfo(logs.DirectoryPath) { UseShellExecute = true }); }
+                    break;
+                case "exportDiagnostics": _ = ExportDiagnostics(); break;
                 case "pickFile": PickBackgroundFile(); break;
                 case "applyImage": ApplyImage(); break;
                 case "discardImage": UpdateImageDraft(ImageSettings.From(_settings)); break;
@@ -245,6 +278,7 @@ sealed class MainForm : Form
         }
         catch (Exception e)
         {
+            if (operation != null) operation.Fail(e); else AppLog.Error("ui.command_failed", e, summary);
             Post(new { type = "toast", kind = "error", text = e.Message });
             PostState();
         }
@@ -261,6 +295,10 @@ sealed class MainForm : Form
                 ApplyLanguage();
                 _status = _engine.CurrentStatus?.ToString() ?? "";
                 PostStatus();
+                break;
+            case "debugLogs":
+                _settings.DebugLogEnabled = (bool)value!;
+                if (AppLog.Current is { } log) log.DebugEnabled = _settings.DebugLogEnabled;
                 break;
             case "theme":
                 ApplyTheme((string)value!, chosen: true);
@@ -315,6 +353,7 @@ sealed class MainForm : Form
 
     private void UpdateImageDraft(ImageSettings draft)
     {
+        AppLog.Info("image.draft", new { draft.Mode, file = Path.GetFileName(draft.SourcePath(_settings)), draft.Fit, draft.Crop, draft.Rotation, draft.OnDevice });
         if (draft != _imageDraft) { _cropPreviewVersion++; _cropSession = null; }
         _imageDraft = draft;
         ResetDraftPreview();
@@ -325,6 +364,7 @@ sealed class MainForm : Form
     private void ApplyImage()
     {
         if (!ImageDirty) return;
+        AppLog.Info("image.apply", new { _imageDraft.Mode, file = Path.GetFileName(CropPath), _imageDraft.Fit, _imageDraft.Crop, _imageDraft.Rotation, _imageDraft.OnDevice });
         if (_imageDraft.Mode is BackgroundMode.File or BackgroundMode.Gallery && !File.Exists(CropPath))
             throw new IOException(L.Get("Background file not found"));
         var previous = ImageSettings.From(_settings);
@@ -342,6 +382,8 @@ sealed class MainForm : Form
         {
             type = "state",
             language = _settings.Language,
+            debugLogEnabled = _settings.DebugLogEnabled,
+            diagnostics = new { directory = AppLog.Current?.DirectoryPath, session = AppLog.Current?.SessionId, error = AppLog.Current?.LastError },
             themes = _themes.Select(n => new { name = n, title = n, thumb = _thumbs.GetValueOrDefault(n) }),
             customThumb = _thumbs.GetValueOrDefault(CustomLayout.ThemeName),
             gallery = GalleryItems(),
@@ -419,15 +461,23 @@ sealed class MainForm : Form
 
     private void OnFrame(Bitmap frame)
     {
+        if (IsDisposed || Disposing) { frame.Dispose(); return; }
         lock (_frameLock)
         {
             _lastFrame?.Dispose();
             _lastFrame = frame; // kept so the window shows the current picture as soon as it opens
         }
+        if (Interlocked.Exchange(ref _frameQueued, 1) != 0) return;
         UI(() =>
         {
+            Interlocked.Exchange(ref _frameQueued, 0);
             if (Visible && WindowState != FormWindowState.Minimized) PostFrame();
             PostStatus();
+            if (Environment.TickCount64 - _lastMetrics >= 10000)
+            {
+                _lastMetrics = Environment.TickCount64;
+                AppLog.Debug("runtime.metrics", new { memoryBytes = Environment.WorkingSet, managedMemoryBytes = GC.GetTotalMemory(false), _engine.FramesSent, _engine.BytesSent, imageDirty = ImageDirty });
+            }
         });
     }
 
@@ -448,13 +498,14 @@ sealed class MainForm : Form
                 if (_draftRenderer.BackgroundError is { } error && error != _draftPreviewError)
                 {
                     _draftPreviewError = error;
+                    AppLog.Current?.Write("ERROR", "preview.background", new { error });
                     Post(new { type = "toast", kind = "error", text = error });
                 }
                 Post(new { type = "frame", data = ToDataUrl(preview), media = (Media?)null });
             }
             catch (Exception e)
             {
-                if (e.Message != _draftPreviewError) { _draftPreviewError = e.Message; Post(new { type = "toast", kind = "error", text = e.Message }); }
+                if (e.Message != _draftPreviewError) { AppLog.Error("preview.render", e); _draftPreviewError = e.Message; Post(new { type = "toast", kind = "error", text = e.Message }); }
             }
             return;
         }
@@ -553,8 +604,9 @@ sealed class MainForm : Form
             using var bmp = r.Render();
             _thumbs[name] = new Thumb(ToDataUrl(bmp, 160, transparent: media != null), media);
         }
-        catch
+        catch (Exception e)
         {
+            AppLog.Error("theme.thumbnail", e, new { name });
             _thumbs.Remove(name); // a broken theme just gets no picture
         }
     }
@@ -604,6 +656,7 @@ sealed class MainForm : Form
         }
         catch (Exception e)
         {
+            AppLog.Error("theme.apply", e, new { name });
             Post(new { type = "toast", kind = "error", text = L.Get("Could not load “{0}”: {1}", name, e.Message) });
         }
     }
@@ -612,25 +665,36 @@ sealed class MainForm : Form
 
     private void PickBackgroundFile()
     {
-        var videos = string.Join(";", FrameSources.VideoExtensions.Select(e => "*" + e));
-        using var dlg = new OpenFileDialog
+        if (_fileDialogOpen || _exportingDiagnostics) return;
+        _fileDialogOpen = true;
+        using var operation = AppLog.Operation("file.choose");
+        try
         {
-            Title = L.Get("Display background"),
-            Filter = $"{L.Get("Images, GIFs and videos")}|*.png;*.jpg;*.jpeg;*.bmp;*.gif;{videos}|{L.Get("Videos")}|{videos}|GIF|*.gif|{L.Get("All files")}|*.*",
-        };
-        if (File.Exists(_imageDraft.File)) dlg.InitialDirectory = Path.GetDirectoryName(_imageDraft.File);
-        if (dlg.ShowDialog(this) == DialogResult.OK)
-        {
-            if (FrameSources.IsVideo(dlg.FileName) && VideoSource.FindFfmpeg() == null)
+            var videos = string.Join(";", FrameSources.VideoExtensions.Select(e => "*" + e));
+            using var dlg = new OpenFileDialog
             {
-                Post(new { type = "toast", kind = "error", text = L.Get("Video requires ffmpeg.exe next to SamaLcd.exe.") });
-            }
-            else
+                Title = L.Get("Display background"),
+                Filter = $"{L.Get("Images, GIFs and videos")}|*.png;*.jpg;*.jpeg;*.bmp;*.gif;{videos}|{L.Get("Videos")}|{videos}|GIF|*.gif|{L.Get("All files")}|*.*",
+            };
+            if (File.Exists(_imageDraft.File)) dlg.InitialDirectory = Path.GetDirectoryName(_imageDraft.File);
+            if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                UpdateImageDraft(_imageDraft with { File = dlg.FileName, Crop = null, Mode = BackgroundMode.File });
+                AppLog.Info("file.selected", new { name = Path.GetFileName(dlg.FileName), bytes = new FileInfo(dlg.FileName).Length, video = FrameSources.IsVideo(dlg.FileName) });
+                AppLog.Debug("file.source", new { path = dlg.FileName });
+                if (FrameSources.IsVideo(dlg.FileName) && VideoSource.FindFfmpeg() == null)
+                {
+                    Post(new { type = "toast", kind = "error", text = L.Get("Video requires ffmpeg.exe next to SamaLcd.exe.") });
+                }
+                else
+                {
+                    UpdateImageDraft(_imageDraft with { File = dlg.FileName, Crop = null, Mode = BackgroundMode.File });
+                }
             }
+            else AppLog.Info("file.choose_canceled");
+            PostState();
         }
-        PostState();
+        catch (Exception e) { operation.Fail(e); throw; }
+        finally { _fileDialogOpen = false; }
     }
 
     private static string BackgroundKind(string path)
@@ -642,18 +706,46 @@ sealed class MainForm : Form
         return $"{kind}, {size:0.0} MB";
     }
 
+    private async Task ExportDiagnostics()
+    {
+        if (_exportingDiagnostics || _fileDialogOpen || AppLog.Current is not { } log) return;
+        _exportingDiagnostics = true;
+        using var operation = AppLog.Operation("diagnostics.export");
+        try
+        {
+            using var dialog = new SaveFileDialog { Title = L.Get("Export diagnostic logs"), Filter = "ZIP|*.zip", DefaultExt = "zip", AddExtension = true, FileName = $"SamaLcd-diagnostics-{DateTime.Now:yyyyMMdd-HHmmss}.zip" };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            var snapshot = new
+            {
+                webviewVersion = _webEnvironment?.BrowserVersionString, ffmpegPath = VideoSource.FindFfmpeg(),
+                _settings.Language, _settings.Width, _settings.Height, _settings.VideoFps,
+                applied = ImageSettings.From(_settings) with { File = Path.GetFileName(_settings.BackgroundFile) },
+                draft = _imageDraft with { File = Path.GetFileName(_imageDraft.File) },
+                imageDirty = ImageDirty, _engine.DeviceInfo, _engine.Connected, _engine.Paused,
+                _engine.FramesSent, _engine.BytesSent, _engine.Storage, _engine.SdCard,
+            };
+            var destination = dialog.FileName;
+            await Task.Run(() => log.Export(destination, snapshot, WindowsCrashReport.ReadRecent()));
+            Post(new { type = "toast", kind = "success", text = L.Get("Diagnostic logs exported.") });
+        }
+        catch (Exception e) { operation.Fail(e); Post(new { type = "toast", kind = "error", text = L.Get("Could not export logs: {0}", e.Message) }); }
+        finally { _exportingDiagnostics = false; }
+    }
+
     // ---------- window and tray ----------
 
     private async Task CheckFfmpeg()
     {
+        using var operation = AppLog.Operation("ffmpeg.check");
         try
         {
             _ffmpegStatus = L.Get("Checking FFmpeg…");
             await Task.Run(() => FfmpegInstaller.EnsureAsync(key => UI(() => { _ffmpegStatus = L.Get(key); PostState(); })));
             _ffmpegStatus = L.Get("FFmpeg ready");
+            AppLog.Info("ffmpeg.ready", new { path = VideoSource.FindFfmpeg() });
             UI(() => _engine.ApplyBackgroundSettings());
         }
-        catch (Exception ex) { _ffmpegStatus = L.Get("FFmpeg setup failed: {0}", ex.Message); }
+        catch (Exception ex) { operation.Fail(ex); _ffmpegStatus = L.Get("FFmpeg setup failed: {0}", ex.Message); }
         UI(PostState);
     }
 
@@ -661,6 +753,7 @@ sealed class MainForm : Form
     {
         var source = CropPath;
         if (!File.Exists(source)) return;
+        using var operation = AppLog.Operation("crop.open", new { name = Path.GetFileName(source), crop = _imageDraft.Crop });
         var version = ++_cropPreviewVersion;
         _cropSession = null;
         try
@@ -683,12 +776,13 @@ sealed class MainForm : Form
             _cropDuration = duration;
             Post(new { type = "cropSource", source, url = UrlOf(poster), crop = _imageDraft.Crop, session = _cropSession, duration, seconds });
         }
-        catch (Exception ex) { Post(new { type = "toast", kind = "error", text = ex.Message }); }
+        catch (Exception ex) { operation.Fail(ex); Post(new { type = "toast", kind = "error", text = ex.Message }); }
     }
 
     private async Task SeekCrop(string session, string source, double seconds, int requestId)
     {
         if (session != _cropSession || source != CropPath || !double.IsFinite(seconds) || _cropDuration <= 0) return;
+        using var operation = AppLog.Operation("crop.seek", new { name = Path.GetFileName(source), seconds, requestId });
         var version = ++_cropPreviewVersion;
         try
         {
@@ -706,6 +800,7 @@ sealed class MainForm : Form
         }
         catch (Exception ex)
         {
+            operation.Fail(ex);
             if (version == _cropPreviewVersion) Post(new { type = "cropFrame", session, source, requestId, error = ex.Message });
         }
     }
@@ -741,6 +836,7 @@ sealed class MainForm : Form
 
     private void ExitApp()
     {
+        AppLog.Info("app.exit_requested");
         _exiting = true;
         _tray.Visible = false;
         _engine.Stop();
@@ -753,6 +849,7 @@ sealed class MainForm : Form
         if (!_exiting && e.CloseReason == CloseReason.UserClosing)
         {
             e.Cancel = true;
+            AppLog.Info("window.hidden");
             Hide();
             return;
         }
@@ -774,7 +871,7 @@ sealed class MainForm : Form
     private void UI(Action a)
     {
         if (IsDisposed || !IsHandleCreated) return;
-        try { BeginInvoke(a); }
+        try { BeginInvoke(() => { if (IsDisposed || Disposing) return; try { a(); } catch (Exception e) { AppLog.Error("ui.dispatch", e); } }); }
         catch (InvalidOperationException) { }
     }
 

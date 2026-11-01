@@ -62,6 +62,7 @@ function palette(el, colors, current, pick) {
 }
 
 function toast(text, kind = 'info') {
+  if (kind === 'error') window.recordUiError(text, 'toast');
   const t = document.createElement('div');
   t.className = `alert alert-${kind} shadow-lg`;
   t.textContent = text;
@@ -98,6 +99,7 @@ async function applyState(s) {
   if (revision !== stateRevision) return;
   $('#language').value = I18n.language;
   state = s;
+  window.configureDiagnostics(s);
   $('#applyImage').disabled = !s.imageDirty;
   $('#discardImage').disabled = !s.imageDirty;
   $('#previewDraftBadge').classList.toggle('hidden', !s.imageDirty);
@@ -169,6 +171,9 @@ function renderStatus(m) {
 }
 $('#language').onchange = e => set('language', e.target.value);
 $('#retryFfmpeg').onclick = () => host.send({cmd:'installFfmpeg'});
+$('#debugLogs').onchange = e => set('debugLogs', e.target.checked);
+$('#openLogs').onclick = () => host.send({cmd:'openLogs'});
+$('#exportDiagnostics').onclick = () => host.send({cmd:'exportDiagnostics'});
 
 host.on(m => {
   switch (m.type) {
@@ -662,7 +667,7 @@ function mockHost() {
       if (m.cmd === 'ready') { listener(structuredClone(s)); draw(); listener({ type: 'status', textKey: 'Connected: {0}', textArgs: ['COM4'], connected: true, device: s.device }); }
       if (m.cmd === 'sensors') listener({ type: 'sensors', aliases: values, list: [{ id: '/amdcpu/0/load/0', name: 'CPU Total', hardware: 'AMD Ryzen 7 7700X', type: 'Load', value: 23 }] });
       if (m.cmd === 'layout') { s.layout = m.layout; draw(); }
-      if (m.cmd === 'set') { s[m.key] = m.value; updateImageDirty(); if (m.key === 'language') I18n.saveLanguage(m.value); if (m.key !== 'brightness') listener(structuredClone(s)); }
+      if (m.cmd === 'set') { s[m.key === 'debugLogs' ? 'debugLogEnabled' : m.key] = m.value; updateImageDirty(); if (m.key === 'language') I18n.saveLanguage(m.value); if (m.key !== 'brightness') listener(structuredClone(s)); }
       if (m.cmd === 'applyImage') { appliedImage = Object.fromEntries(imageKeys.map(key => [key, s[key]])); updateImageDirty(); listener(structuredClone(s)); draw(); }
       if (m.cmd === 'discardImage') { Object.assign(s, appliedImage); updateImageDirty(); listener(structuredClone(s)); draw(); }
     },

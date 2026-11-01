@@ -7,6 +7,7 @@ public enum BackgroundMode { Theme, Color, File, Gallery }
 /// <summary>User settings, stored in %APPDATA%\SamaLcd\settings.json.</summary>
 public sealed class AppSettings
 {
+    public bool DebugLogEnabled { get; set; }
     private string _language = "en";
     /// <summary>UI language; existing settings without this field default to English.</summary>
     public string Language
@@ -64,8 +65,9 @@ public sealed class AppSettings
             if (File.Exists(FilePath))
                 return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), Rendering.Theme.JsonOptions) ?? new AppSettings();
         }
-        catch
+        catch (Exception e)
         {
+            AppLog.Error("settings.load", e);
             // fall back to defaults on a broken file
         }
         return new AppSettings();

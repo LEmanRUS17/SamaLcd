@@ -42,6 +42,8 @@ public sealed class VideoSource : IFrameSource
     private Bitmap? _pending; // newest decoded frame, not shown yet
     private Bitmap? _shown;   // frame handed out by FrameAt
     private volatile bool _disposed;
+    private long _decodedFrames;
+    private readonly long _started = Environment.TickCount64;
 
     public int? FrameIntervalMs { get; }
     public string? Error { get; private set; }
@@ -84,7 +86,9 @@ public sealed class VideoSource : IFrameSource
                      "-vf", $"fps={fps},{scale}", "-f", "rawvideo", "-pix_fmt", "bgra", "-" })
             psi.ArgumentList.Add(a);
         _ffmpeg = Process.Start(psi)!;
-        _ffmpeg.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) Error = e.Data; };
+        AppLog.Info("video.decoder_started", new { file = Path.GetFileName(path), processId = _ffmpeg.Id, width, height, fps, fit, crop });
+        AppLog.Debug("video.decoder_arguments", new { arguments = psi.ArgumentList.ToArray() });
+        _ffmpeg.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) { Error = e.Data; AppLog.Debug("video.decoder_stderr", new { text = DiagnosticLog.Clip(e.Data) }); } };
         _ffmpeg.BeginErrorReadLine();
         _reader = new Thread(ReadLoop) { IsBackground = true, Name = "video decode" };
         _reader.Start();
@@ -92,17 +96,21 @@ public sealed class VideoSource : IFrameSource
 
     private void ReadLoop()
     {
-        var stream = _ffmpeg.StandardOutput.BaseStream;
-        var buf = new byte[_width * _height * 4];
         try
         {
+            var stream = _ffmpeg.StandardOutput.BaseStream;
+            var buf = new byte[checked(_width * _height * 4)];
             while (!_disposed)
             {
                 int got = 0;
                 while (got < buf.Length)
                 {
                     int n = stream.Read(buf, got, buf.Length - got);
-                    if (n <= 0) return;
+                    if (n <= 0)
+                    {
+                        if (!_disposed) { Error ??= "Video decoder closed its output unexpectedly."; AppLog.Current?.Write("ERROR", "video.decoder_eof", new { Error, decodedFrames = _decodedFrames }); }
+                        return;
+                    }
                     got += n;
                 }
                 var bmp = new Bitmap(_width, _height, PixelFormat.Format32bppArgb);
@@ -113,15 +121,22 @@ public sealed class VideoSource : IFrameSource
                 Bitmap? old;
                 lock (_lock)
                 {
+                    if (_disposed) { bmp.Dispose(); return; }
                     old = _pending;
                     _pending = bmp;
                 }
+                _decodedFrames++;
                 old?.Dispose(); // decoded faster than drawn: drop the skipped frame
             }
         }
         catch (Exception) when (_disposed)
         {
             // pipe closed on shutdown
+        }
+        catch (Exception e)
+        {
+            Error = e.Message;
+            AppLog.Error("video.decoder_reader", e, new { decodedFrames = _decodedFrames });
         }
     }
 
@@ -141,7 +156,7 @@ public sealed class VideoSource : IFrameSource
 
     public void Dispose()
     {
-        _disposed = true;
+        lock (_lock) { if (_disposed) return; _disposed = true; }
         try
         {
             if (!_ffmpeg.HasExited) _ffmpeg.Kill();
@@ -150,7 +165,8 @@ public sealed class VideoSource : IFrameSource
         {
             // already gone
         }
-        _reader.Join(2000);
+        bool stopped = _reader.Join(2000);
+        AppLog.Info("video.decoder_stopped", new { decodedFrames = _decodedFrames, elapsedMs = Environment.TickCount64 - _started, stopped });
         _ffmpeg.Dispose();
         lock (_lock)
         {

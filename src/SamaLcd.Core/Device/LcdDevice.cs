@@ -256,43 +256,49 @@ public sealed class LcdDevice : IDisposable
     /// <summary>Copies a local file to the panel, e.g. to /mnt/SDCARD/video/name.mp4.</summary>
     public void UploadFile(string localPath, string remotePath, Action<double>? progress = null)
     {
-        StopPlayback(); // Sama stops media before uploading as well
-        var dir = remotePath[..(remotePath.LastIndexOf('/') + 1)];
-        ListDir(dir);
-        using var file = File.OpenRead(localPath);
-        if (file.Length >= uint.MaxValue) throw new IOException("File is too large (4 GB max)");
-        var name = Encoding.ASCII.GetBytes(remotePath);
-        var payload = new byte[name.Length + 4];
-        name.CopyTo(payload, 0);
-        for (int i = 0; i < 4; i++) payload[name.Length + i] = (byte)(file.Length >> (8 * i)); // little-endian here
-        lock (_lock)
+        using var operation = AppLog.Operation("usb.upload", new { source = Path.GetFileName(localPath), remotePath });
+        try
         {
-            _port.DiscardInBuffer();
-            SendCommand(LcdCommand.CreateFile, name.Length, payload);
-            var reply = ReadReply(3000);
-            if (!reply.Contains("create_success", StringComparison.Ordinal))
-                throw new IOException($"Panel refused to create {remotePath}: '{reply}'");
-
-            var buf = new byte[ChunkSize * 1024];
-            long sent = 0;
-            int n;
-            while ((n = file.Read(buf, 0, buf.Length)) > 0)
+            StopPlayback(); // Sama stops media before uploading as well
+            var dir = remotePath[..(remotePath.LastIndexOf('/') + 1)];
+            ListDir(dir);
+            using var file = File.OpenRead(localPath);
+            if (file.Length >= uint.MaxValue) throw new IOException("File is too large (4 GB max)");
+            var name = Encoding.ASCII.GetBytes(remotePath);
+            var payload = new byte[name.Length + 4];
+            name.CopyTo(payload, 0);
+            for (int i = 0; i < 4; i++) payload[name.Length + i] = (byte)(file.Length >> (8 * i)); // little-endian here
+            lock (_lock)
             {
-                SendData(buf.AsSpan(0, n));
-                if (UploadBlockDelayMs > 0) Thread.Sleep(UploadBlockDelayMs);
-                sent += n;
-                progress?.Invoke((double)sent / file.Length);
-            }
+                _port.DiscardInBuffer();
+                SendCommand(LcdCommand.CreateFile, name.Length, payload);
+                var reply = ReadReply(3000);
+                if (!reply.Contains("create_success", StringComparison.Ordinal))
+                    throw new IOException($"Panel refused to create {remotePath}: '{reply}'");
 
-            reply = "";
-            var deadline = Environment.TickCount64 + 60_000;
-            while (!reply.Contains("file_rev_done", StringComparison.Ordinal) && Environment.TickCount64 < deadline)
-                reply += ReadReply(1000);
-            if (!reply.Contains("file_rev_done", StringComparison.Ordinal))
-                throw new IOException($"Panel did not confirm the upload: '{reply}'");
+                var buf = new byte[ChunkSize * 1024];
+                long sent = 0;
+                int n;
+                while ((n = file.Read(buf, 0, buf.Length)) > 0)
+                {
+                    SendData(buf.AsSpan(0, n));
+                    if (UploadBlockDelayMs > 0) Thread.Sleep(UploadBlockDelayMs);
+                    sent += n;
+                    progress?.Invoke((double)sent / file.Length);
+                }
+
+                reply = "";
+                var deadline = Environment.TickCount64 + 60_000;
+                while (!reply.Contains("file_rev_done", StringComparison.Ordinal) && Environment.TickCount64 < deadline)
+                    reply += ReadReply(1000);
+                if (!reply.Contains("file_rev_done", StringComparison.Ordinal))
+                    throw new IOException($"Panel did not confirm the upload: '{reply}'");
+            }
+            var size = FileSize(remotePath);
+            if (size != file.Length) throw new IOException($"Uploaded size mismatch: {size} on panel, {file.Length} local");
+            AppLog.Info("usb.upload_verified", new { remotePath, size });
         }
-        var size = FileSize(remotePath);
-        if (size != file.Length) throw new IOException($"Uploaded size mismatch: {size} on panel, {file.Length} local");
+        catch (Exception e) { operation.Fail(e); throw; }
     }
 
     /// <summary>Starts looping playback of a video stored on the panel.</summary>
@@ -306,16 +312,23 @@ public sealed class LcdDevice : IDisposable
     /// <summary>Sends a command whose payload is a string and returns the text reply.</summary>
     public string TextCommand(LcdCommand cmd, string text, int timeoutMs, byte flag = 0, string? until = null)
     {
+        AppLog.Debug("usb.text_command", new { command = cmd.ToString(), text = DiagnosticLog.Clip(text, 512), timeoutMs, flag });
         var payload = Encoding.ASCII.GetBytes(text);
         lock (_lock)
         {
             _port.DiscardInBuffer();
             SendCommand(cmd, Math.Max(1, payload.Length), payload, flag);
-            if (until == null) return ReadReply(timeoutMs);
+            if (until == null)
+            {
+                var result = ReadReply(timeoutMs);
+                AppLog.Debug("usb.text_reply", new { command = cmd.ToString(), reply = DiagnosticLog.Clip(result, 1024) });
+                return result;
+            }
             var reply = "";
             var deadline = Environment.TickCount64 + timeoutMs;
             while (!reply.Contains(until, StringComparison.Ordinal) && Environment.TickCount64 < deadline)
                 reply += ReadReply(500);
+            AppLog.Debug("usb.text_reply", new { command = cmd.ToString(), reply = DiagnosticLog.Clip(reply, 1024) });
             return reply;
         }
     }

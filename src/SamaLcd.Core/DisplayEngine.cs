@@ -40,6 +40,7 @@ public sealed class DisplayEngine : IDisposable
     {
         var message = new LocalizedMessage(key, args);
         Volatile.Write(ref _currentStatus, message);
+        AppLog.Info("engine.status", new { key, args });
         Status?.Invoke(message.ToString());
     }
 
@@ -71,6 +72,7 @@ public sealed class DisplayEngine : IDisposable
             if (SdCard.Busy || PendingCleanup != null) return;
             var files = clear ? VideoStoragePolicy.SelectSnapshot(SdCard, revision, name) : Array.Empty<SdVideoFile>();
             _sdOperation = new(clear, revision, files);
+            AppLog.Info("sd.queued", new { delete = clear, revision, files });
             SdCard = SdCard with { Busy = true, Error = null };
         }
         SdCardChanged?.Invoke();
@@ -105,10 +107,11 @@ public sealed class DisplayEngine : IDisposable
                 ReportStatus("SD files deleted. Playback is paused.");
             }
         }
-        catch (Exception e) { error = e.Message; }
+        catch (Exception e) { AppLog.Error("sd.operation", e); error = e.Message; }
         try { ReadSdFiles(error); }
         catch (Exception e)
         {
+            AppLog.Error("sd.list", e);
             lock (_sync) SdCard = new("", null, false, error ?? e.Message);
             SdCardChanged?.Invoke();
         }
@@ -123,6 +126,7 @@ public sealed class DisplayEngine : IDisposable
             .Select(n => new SdVideoFile(n, dev.FileSize("/mnt/SDCARD/video/" + n))).Where(f => f.Size > 0).ToArray();
         Storage = dev.StorageInfo();
         if (Storage.Length != 6) throw new IOException("Invalid storage reply");
+        AppLog.Info("sd.list", new { files, storageKiB = Storage });
         lock (_sync) SdCard = new(Guid.NewGuid().ToString("N"), files, false, error);
         SdCardChanged?.Invoke();
     }
@@ -131,6 +135,7 @@ public sealed class DisplayEngine : IDisposable
     private TaskCompletionSource<bool>? _cleanupDecision;
     public void ResolveCleanup(string id, bool approved)
     {
+        AppLog.Info("sd.cleanup_decision", new { id, approved });
         lock (_sync) if (PendingCleanup?.Id == id) _cleanupDecision?.TrySetResult(approved);
     }
 
@@ -170,6 +175,7 @@ public sealed class DisplayEngine : IDisposable
             }
             catch (Exception e)
             {
+                AppLog.Error("background.check", e);
                 Log?.Invoke($"Background check failed: {e.Message}");
             }
         }
@@ -248,12 +254,14 @@ public sealed class DisplayEngine : IDisposable
     {
         if (_running) return;
         _running = true;
+        AppLog.Info("engine.start");
         _thread = new Thread(Run) { IsBackground = true, Name = "LCD display loop" };
         _thread.Start();
     }
 
     public void Stop()
     {
+        AppLog.Info("engine.stop");
         _running = false;
         _cleanupDecision?.TrySetResult(false);
         _wake.Set();
@@ -275,6 +283,7 @@ public sealed class DisplayEngine : IDisposable
             }
             catch (Exception e)
             {
+                AppLog.Error("engine.tick", e);
                 Log?.Invoke($"Error: {e.Message}");
                 ReportStatus("Screen error: {0}", e.Message);
                 Disconnect();
@@ -421,6 +430,7 @@ public sealed class DisplayEngine : IDisposable
     /// <summary>Shows the video by sending its frames instead (slow, ~4 fps) when the panel cannot play it.</summary>
     private void FallBackToStreaming(VideoRequest wanted, Exception e)
     {
+        AppLog.Error("video.streaming_fallback", e, new { file = Path.GetFileName(wanted.Source) });
         ReportStatus("Device playback failed ({0}); streaming instead", e.Message);
         Log?.Invoke($"Device video failed: {e}");
         _videoFailures = 0;
@@ -433,6 +443,7 @@ public sealed class DisplayEngine : IDisposable
     /// <summary>Copies the converted video to the panel unless it is already there; returns its path on the panel.</summary>
     private string EnsureUploaded(PreparedVideo video, VideoRequest wanted)
     {
+        AppLog.Info("video.upload_check", new { video.RemoteName, video.Size });
         var dev = _device!;
         long needBytes = VideoStoragePolicy.RequiredBytes(video.Size);
         string[] dirs = ["/mnt/SDCARD/video/", "/root/video/"];
@@ -441,6 +452,7 @@ public sealed class DisplayEngine : IDisposable
             if (dev.FileSize(dir + video.RemoteName) == video.Size) return dir + video.RemoteName;
         }
         Storage = dev.StorageInfo(); // Refresh AFTER conversion; free space may have changed.
+        AppLog.Info("storage.after_conversion", new { storageKiB = Storage, needBytes });
         if (Storage.Length != 6) throw new IOException("Invalid storage reply");
         string? destination = Storage[5] * 1024 >= needBytes ? dirs[0] : Storage[2] * 1024 >= needBytes ? dirs[1] : null;
         if (destination == null)
