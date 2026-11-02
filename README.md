@@ -1,179 +1,197 @@
 # SAMA LCD
 
-Замена программы **SAMA WaterCooling** (Sama.exe) для круглого экрана 2.1" (480×480) на помпе водяного охлаждения SAMA.
-Открытый код на C# / .NET 8, который легко расширять.
+**English** | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [Русский](README.ru.md)
 
-## Interface language / Язык интерфейса
+An open-source C# / .NET 8 replacement for **SAMA WaterCooling** (`Sama.exe`), designed for the round 2.1-inch, 480×480 display on a SAMA liquid-cooling pump.
 
-The interface defaults to **English**, including upgrades from settings files without a language field.
-Choose **App → Language** to switch immediately to **English**, **简体中文**, **日本語**, or **Русский**.
-The choice is saved as `language` (`en`, `zh-Hans`, `ja`, `ru`) in `%APPDATA%\SamaLcd\settings.json`.
-The language covers settings, layout editor, sensor aliases, tray menus, file dialogs and status messages.
-Custom captions, file names, sensor IDs and theme contents are preserved.
+## Getting started
 
-Язык по умолчанию — английский. Русский можно выбрать на вкладке **App → Language**;
-после переключения этот пункт называется **Программа → Язык**. Выбор сохраняется автоматически.
+Requirements: Windows, .NET 8 Desktop Runtime and Microsoft Edge WebView2 Runtime. Some hardware sensors also require administrator access and the separately installed [PawnIO driver](https://pawnio.eu).
 
-Translations are maintained in `src/SamaLcd.Core/Localization/*.json`. Native and web UI share these catalogs.
-After editing them, run `node scripts/generate-locales.mjs` to update the browser bundle, then `dotnet test`.
-The committed browser bundle keeps the standalone `wwwroot/index.html` preview working without a web server.
-Catalog completeness, format arguments, browser/native parity, English defaults and settings round trips are tested.
+1. Fully exit the original SAMA software and disable its autostart. Only one application can open the display's COM port at a time.
+2. Build and publish the project as described below, then run `publish/SamaLcd.exe`. It requests administrator access for hardware sensors.
+3. **Image** manages backgrounds, crop, rotation and playback; **Data** selects themes and custom layouts; **Sensors** lists readings and keys; **App** contains language, startup, storage and diagnostics.
 
-## Запуск
+Closing the window minimizes the app to the tray. Use the tray menu to exit completely. Autostart runs in the tray without opening the settings window.
 
-Готовая сборка: `publish\SamaLcd.exe` (нужен .NET 8 Desktop Runtime, он уже установлен вместе с SDK).
+Settings: `%APPDATA%/SamaLcd/settings.json`. Custom layout: `%APPDATA%/SamaLcd/custom-layout.json`.
 
-1. Полностью закройте Sama.exe и отключите у него автозапуск (в его настройках, либо удалите SAMA через «Программы и компоненты»).
-   Обе программы одновременно работать не могут: COM-порт открывает только одна.
-2. Запустите `SamaLcd.exe` (запросит права администратора — они нужны для датчиков температуры CPU, как и у Sama).
-3. Окно сразу показывает, что сейчас на экране (круглый предпросмотр слева), а настройки разложены по вкладкам:
-   - **Изображение** — фон («Галерея», «Цвет» из палитры, «Из источника» — любой файл), поворот, видео на самом экране;
-   - **Данные** — вариант отображения (готовые темы с миниатюрами или «Своя раскладка» с редактором);
-   - **Датчики** — все показания с поиском и ключами для надписей;
-   - **Программа** — автозапуск, сведения об экране.
+## Languages
 
-   Закрытие окна сворачивает программу в трей; выход — через меню значка в трее.
+The default interface language is **English**, including existing settings without a language field. **App → Language** switches immediately between English, Simplified Chinese, Japanese and Russian. The saved `language` codes are `en`, `zh-Hans`, `ja` and `ru`.
 
-Окно — веб-страница (`src/SamaLcd/wwwroot`, компоненты [daisyUI](https://daisyui.com/components/) + Tailwind, работают
-без интернета) в Microsoft Edge WebView2 (в Windows 11 он уже есть). Страницу можно открыть и в обычном браузере:
-без программы она работает на тестовых данных — удобно для правки вёрстки.
+Settings, editor labels, sensor aliases, tray menus, dialogs and status messages are translated. Custom captions, file names, sensor IDs and theme contents retain their original text.
 
-Настройки хранятся в `%APPDATA%\SamaLcd\settings.json`.
+## Backgrounds and applying changes
 
-### Фон
+- **Gallery** reads images, GIFs and videos from the `backgrounds` folder beside the app. Add files and choose **Refresh**. The first tile restores the theme's own background.
+- **Color** provides a palette and custom color picker.
+- **From file** accepts images, animated GIFs and videos, including MP4, MKV, WEBM, MOV and AVI. Scaling options are **Fill**, **Fit** and **Stretch**.
 
-Вкладка «Изображение», блок «Фон»:
-- **Галерея** — готовые фоны из папки `backgrounds` рядом с программой (кнопка «Папка галереи»). Свои картинки, GIF
-  и видео достаточно положить туда и нажать «Обновить». Первая плитка «Фон варианта» оставляет фон самого варианта.
-- **Цвет** — заливка из палитры или любым цветом.
-- **Из источника** — любой файл с компьютера: PNG/JPG, анимированный GIF или видео (MP4, MKV, WEBM, MOV, AVI).
-  Масштаб: «Заполнить» (обрезка по кругу), «Вписать», «Растянуть».
+File/gallery selection, color, scaling, crop, rotation and device-playback choices update a local draft preview. **Not applied** indicates pending changes. The display keeps its last applied settings; editing does not convert or upload a new video.
 
-Показатели выбранного варианта всегда рисуются поверх фона. Анимированные фоны (GIF, видео) в окне программы
-тоже двигаются: предпросмотр проигрывает сам файл, а сверху накладывает показатели.
+Choose **Apply to display** to save and send the image configuration together, resuming playback if paused. **Discard changes** restores the applied configuration. Unchanged settings cannot be applied again. Language and brightness changes do not save image drafts; unapplied edits are discarded when the app exits completely. Brightness and pause remain immediate controls.
 
-**Видео и анимированные GIF играет сам экран** (галочка «Видео и GIF играет сам экран», включена по умолчанию),
-как в Sama: файл перекодируется (H.264, 480×480, 24 кадра/с, 2400 кбит/с, кэш в `%LOCALAPPDATA%\SamaLcd\video`),
-загружается на SD-карту экрана (`/mnt/SDCARD/video/samalcd_*.mp4`, удаление файлов требует подтверждения) и играет по кругу.
-Показатели темы передаются поверх видео прозрачным слоем. В окне предпросмотра под слоем показан первый кадр видео.
-Без галочки (или если экран не смог запустить файл) кадры передаются по USB: экран принимает около 2,7 МБ/с,
-поэтому видео, где меняется весь кадр, идёт примерно с 4 кадрами/с.
+Long file names use up to two lines with an ellipsis; hover to see the full name. **Crop / zoom…** is aligned beside the scaling buttons.
 
-Для перекодирования нужен `ffmpeg.exe`: он ищется рядом с программой, в PATH и в папке SAMA
-(`publish.ps1` копирует его рядом с программой).
+### Square crop and video preview
 
-### Датчики
+Choose a file or gallery item, then **Crop / zoom…**. Drag to reposition and use the zoom slider or mouse wheel to remove black borders. The crop is square; the circular mask shows the physical display's visible area.
 
-Ключи `gpu.*` берутся с дискретной видеокарты (RTX), а не со встроенной Radeon; `ram.*` — физическая память.
-Недоступное значение показывается как `--`.
-Температура, частота и мощность CPU, а также датчики материнской платы (вентиляторы, помпа) читаются через драйвер
-**PawnIO** (https://pawnio.eu), его нужно установить отдельно; без него эти значения будут `--`.
-Программа показывает подсказку, если датчики CPU недоступны.
+For videos, move the timeline to choose a visible frame, including when the opening frame is black. FFmpeg extracts preview frames even for formats the browser cannot decode. Seeking preserves crop position and zoom. **Use crop** updates the draft; **Cancel** changes nothing; **Remove crop** restores scaling. Finish with **Apply to display**. The selection applies to the entire video and never overwrites the original.
 
-### Своя раскладка
+Still images and streamed GIFs use the selected source rectangle. Videos and device-played GIFs apply the same crop through FFmpeg before resizing and rotation. Crop changes invalidate converted-video caches.
 
-Вкладка «Данные» → «Своя раскладка»: экран делится сеткой (4×4 … 16×16), элементы перетаскиваются мышью и
-прилипают к клеткам, уголок справа внизу меняет размер, стрелки двигают выбранный элемент, Delete удаляет.
-Элементы: **значение** датчика (знаков после запятой, единица), **шкала** (полоса загрузки), **надпись** (любой текст,
-можно вставлять `{cpu.temp:0}°`), **время**, **дата**. У каждого — цвет из палитры или свой, размер, жирность,
-выравнивание и необязательная подпись сверху своим цветом. Изменения сразу видны на экране.
-Раскладка хранится в `%APPDATA%\SamaLcd\custom-layout.json`.
+### FFmpeg and playback
 
-## Темы
+At startup the app checks for `ffmpeg.exe` beside the executable, on PATH, in its tools cache and in known SAMA installation folders. If absent, it downloads the essentials ZIP and SHA-256 from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/), linked by [ffmpeg.org](https://ffmpeg.org/download.html), verifies the checksum and installs the executable and license. If the app folder is not writable, it uses `%LOCALAPPDATA%/SamaLcd/tools`. **App → Check FFmpeg** retries setup. Still images remain usable if setup fails.
 
-Тема — папка в `publish\themes\` с файлом `theme.json` (и, при необходимости, картинками и шрифтами `.ttf/.otf`,
-которые подхватываются автоматически). В комплекте: `Dashboard`, `Clock`, `Animation` (GIF-фон), `Orbit`, `Gauges`,
-`Minimal`, `Neon`, `Terminal`.
+**Play videos and GIFs on the display** is enabled by default. After applying, files are converted to 480×480, 24 fps H.264/yuv420p without audio, uploaded and looped locally. Theme widgets travel as a transparent overlay. Cache: `%LOCALAPPDATA%/SamaLcd/video`; uploaded names: `samalcd_*.mp4`.
 
-```jsonc
+With device playback disabled, or when it fails and the app falls back to streaming, frames travel over USB. Measured throughput on the tested device is about 2.7 MB/s, or roughly 4 fps when the entire frame changes. Local playback is smoother.
+
+## Capacity and SD files
+
+Capacity is read before conversion and checked again against the actual converted file size. Encoding first targets existing free space. If that cannot provide a usable bitrate, it targets total capacity and asks about cleanup after conversion. Two-pass size control uses a 512 KiB reserve, a 10% overhead margin and a maximum target bitrate of 2400 kbit/s. Videos are never shortened to make them fit.
+
+Enough space permits upload. Otherwise, the app lists SD video names, sizes and reclaimable space for confirmation. Only the exact unchanged files approved by the user may be deleted. Cancel/Escape keeps files and pauses the operation. Changing the source or exiting invalidates a pending request. CLI sessions without a confirmation handler cannot delete files automatically.
+
+**App → SD card files** manages `/mnt/SDCARD/video/`. Opening the tab or selecting **Refresh** reads names, sizes, total file usage and capacity. Each row's **Delete** confirms one file; **Clear videos…** confirms the displayed list. Deletion pauses playback to prevent automatic re-upload, then refreshes the list and free space. Changed lists or reconnected devices invalidate old confirmations. Other SD directories and internal storage are never cleared or formatted.
+
+## Sensors and custom layouts
+
+Unavailable readings appear as `--`. `gpu.*` aliases prefer the discrete GPU; `ram.*` describes physical memory. CPU temperature, clock and power, plus some motherboard, fan and pump readings, need PawnIO. The app shows a hint when CPU readings are unavailable.
+
+**Data → Custom layout** provides a 4×4 to 16×16 grid. Drag items to move them and the bottom-right handle to resize. Arrow keys move the selected item; Delete removes it. Items include sensor values, bars, text, time and date, with colors, sizes, alignment and optional captions. Layout edits apply immediately.
+
+## Themes
+
+Themes live in `themes/<name>/theme.json` beside the app. Bundled themes: `Dashboard`, `Clock`, `Animation`, `Orbit`, `Gauges`, `Minimal`, `Neon`, `Terminal`. Theme folders can contain images and `.ttf`/`.otf` fonts.
+
+```json
 {
-  "name": "Моя тема",
-  "intervalMs": 1000,                                   // период перерисовки
-  "background": { "color": "#000000", "image": "bg.gif", "fit": "cover" },  // cover | contain | stretch
+  "name": "My theme",
+  "intervalMs": 1000,
+  "background": {
+    "color": "#000000",
+    "image": "bg.gif",
+    "fit": "cover"
+  },
   "widgets": [
-    { "type": "text", "x": 240, "y": 200, "text": "{cpu.temp:0}°", "size": 96, "bold": true, "color": "#FFFFFF" },
-    { "type": "arc",  "x": 240, "y": 240, "radius": 218, "thickness": 18, "value": "cpu.load",
-      "startAngle": 135, "sweepAngle": 270, "color": "#00D1FF", "colorEnd": "#FF3B5C" },
-    { "type": "bar",  "x": 140, "y": 300, "width": 200, "height": 10, "value": "gpu.load", "max": 100 },
-    { "type": "image", "x": 0, "y": 0, "path": "logo.png", "width": 100, "height": 100 },
-    { "type": "circle", "x": 240, "y": 400, "radius": 58, "color": "#99000000" }
+    {
+      "type": "text",
+      "x": 240,
+      "y": 200,
+      "text": "{cpu.temp:0}°",
+      "size": 96,
+      "bold": true,
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "arc",
+      "x": 240,
+      "y": 240,
+      "radius": 218,
+      "thickness": 18,
+      "value": "cpu.load",
+      "startAngle": 135,
+      "sweepAngle": 270,
+      "color": "#00D1FF",
+      "colorEnd": "#FF3B5C"
+    },
+    {
+      "type": "bar",
+      "x": 140,
+      "y": 300,
+      "width": 200,
+      "height": 10,
+      "value": "gpu.load",
+      "max": 100
+    },
+    {
+      "type": "image",
+      "x": 0,
+      "y": 0,
+      "path": "logo.png",
+      "width": 100,
+      "height": 100
+    },
+    {
+      "type": "circle",
+      "x": 240,
+      "y": 400,
+      "radius": 58,
+      "color": "#99000000"
+    }
   ]
 }
 ```
 
-Подстановки в тексте: `{ключ:формат}` — например `{gpu.temp:0.0}`, `{time:HH:mm:ss}`, `{date:dd.MM}`.
-Ключи: `cpu.temp cpu.load cpu.clock cpu.power gpu.temp gpu.hotspot gpu.load gpu.clock gpu.power gpu.mem.load gpu.fan
-ram.load ram.used ram.free board.temp pump.rpm fan.rpm` или любой идентификатор LibreHardwareMonitor
-(список — кнопка «Датчики…» или `samalcd-cli sensors` от администратора).
-
-## Консольная утилита
-
-`publish\cli\samalcd-cli.exe`: `ports`, `info`, `brightness 50`, `color #FF0000`, `image pic.png`,
-`theme <папка> [секунды] [--bg #RRGGBB|файл]`, `render <папка> out.png` (кадр в файл без экрана), `sensors`,
-`bench [кадры]` (скорость передачи на экран), `ls [папка]`, `upload <файл> <путь на экране>`, `play <путь на экране>`,
-`raw <код> [текст]` (произвольная команда, для экспериментов).
-
-## Устройство и протокол
-
-Экран определяется как USB-COM порт `VID_1D6B&PID_0121` (рабочий режим); `VID_1A86&PID_CA21` / `CT21INCH` —
-загрузочный режим, его программа «будит» открытием порта. Ответ на приветствие: `chs_5inch.dev1_rom1.88`.
-Протокол восстановлен из Sama.exe и совпадает с семейством Turing Smart Screen «rev C»:
-
-| Команда | Код | Данные |
-|---|---|---|
-| Hello | 1 | `C5 D3`, ответ `chs_…rom<версия>` |
-| Остановить видео / медиа | 121 / 150 | |
-| Яркость | 123 | 1 байт (Sama шлёт `0..255 × 0.76`) |
-| Полный кадр | 200 | затем W×H×4 байт BGRA |
-| Частичное обновление | 204 | доп. поле: номер (BE32, с 0 после каждого полного кадра); затем сегменты + `EF 69` |
-| Статус | 207 | ответ `needReSend:X|renderCnt:N` |
-| Свободное место | 100 | ответ `всего-занято-свободно-SDвсего-SDзанято-SDсвободно` в КБ (внутренняя память ~2,6 МБ) |
-| Список папки | 101 | путь; ответ `result:dir:…file:a.mp4/b.mp4/` |
-| Удалить файл | 102 | путь |
-| Размер файла | 110 | путь; ответ — байты, `0` если нет |
-| Создать файл | 111 | путь + размер (LE32), длина в заголовке = длина пути; ответ `create_success`, затем данные файла, ответ `file_rev_done`. Перед загрузкой остановить воспроизведение, иначе экран теряет данные |
-| Играть видео | 120 | путь, флаг 1; ответ `play_video_success` |
-| Слой поверх видео | 202 + 208 | 202: BGRA с прозрачностью; 208: маска видимых участков `[индекс:24][длина:16]…` + `EF 69` |
-| Обновление слоя | 204 | доп. поле: номер + длина маски (BE32); данные: изменённые пиксели + маска + `EF 69` |
-
-Каждая команда — пакет 250 байт: `[код][EF 69][длина BE32][флаг][0 0][данные с 10-го байта]`;
-поток данных — пакеты по 250 байт, в каждом 249 байт полезной нагрузки.
-Формат сегментов и пикселей описан в `src/SamaLcd.Core/Device/FrameCodec.cs`;
-тесты (`tests/`) сверяют кодировщик побайтно с результатами оригинального Sama.exe.
-
-## Структура
-
-- `src/SamaLcd.Core` — драйвер экрана (`Device/`), отрисовка тем (`Rendering/`), датчики (`Sensors/`, свой источник —
-  реализовать `ISensorSource` и добавить в `SensorHub`), цикл вывода (`DisplayEngine`).
-- `src/SamaLcd` — приложение в трее.
-- `src/SamaLcd.Cli` — консольная утилита.
-- Новый вид виджета: класс в `Rendering/Theme.cs` (+ `JsonDerivedType`) и отрисовка в `ThemeRenderer.Render`.
-
-Сборка: `dotnet build`, тесты: `dotnet test`, публикация: `publish.ps1`.
-
-## Interactive square crop
-
-In Image, select a file or gallery background and choose **Crop / zoom…**. Drag the image and use the zoom slider or mouse wheel to exclude embedded black borders. The square selection has a circular display mask. **Use crop** updates the draft; **Cancel** changes nothing, and **Remove crop** restores the scaling options. Choosing another file/gallery item resets its selection. Originals are never overwritten.
-
-File/gallery selection, color, scaling, crop, rotation and device-playback choices are drafts. They update the local preview with a **Not applied** badge; the display keeps its last applied settings and no new video is converted or uploaded. **Apply to display** saves and applies all image settings together, resuming playback if paused. **Discard changes** restores the applied selection. Unchanged settings cannot be applied again. Unapplied drafts are not saved by language/brightness changes or restored after exiting the app. Brightness and pause remain immediate controls.
-
-Still images and streamed GIFs use the source rectangle in the renderer. Device-played GIF/video and streamed video apply the same rectangle through FFmpeg before resizing or rotation. Changed crops invalidate converted-video caches. Video cropping includes a seek bar and elapsed/total time: FFmpeg extracts the selected frame, including for formats the browser cannot decode. Seeking only changes the preview; the saved square crop applies to the entire video. Late preview replies cannot overwrite a newer selection.
-
-At startup the app checks for `ffmpeg.exe` next to the program. It reuses an installed copy when available; otherwise it downloads the essentials ZIP and SHA-256 from the [gyan.dev Windows builds](https://www.gyan.dev/ffmpeg/builds/) linked by [ffmpeg.org](https://ffmpeg.org/download.html), checks the checksum, and atomically installs only the executable and license. If the app directory is not writable it uses `%LOCALAPPDATA%/SamaLcd/tools`. App settings show readiness or errors and offer a retry. Download failures do not prevent still-image use.
-
-## Storage-aware device video
-
-The app reads capacity before conversion and checks free space again after conversion. It first tries to encode for existing free space. If a useful bitrate will not fit, it encodes against total capacity instead, then asks whether to remove the displayed SD video files. No files (including older `samalcd_` files) are deleted automatically. Confirmation shows names, sizes, required space and reclaimable space; only those exact unchanged files in `/mnt/SDCARD/video/` may be removed. Other SD folders are never formatted or cleared. The app checks capacity again after deletion before upload. Cancel or Escape preserves files and pauses playback/upload instead of silently retrying cleanup or falling back to USB. Closing the app or changing the source while waiting invalidates the request. CLI sessions without a confirmation handler cannot delete files.
-Encoding remains 480×480 / 24 fps H.264 with two-pass size control, 512 KiB reserve and 10% overhead margin. It never truncates a video to force it to fit.
-
-The App tab lists names, sizes and total usage for files in the display's SD video directory, `/mnt/SDCARD/video/`. Opening the tab or choosing **Refresh** reads the current list and capacity. Each row's **Delete** button confirms just that file; **Clear videos…** confirms the complete displayed list. Cancel/Escape keeps the files. Only explicit confirmation deletes the listed unchanged files. New files, other SD directories and internal storage are left alone. A changed list or reconnected device invalidates the confirmation. Deleting pauses playback to prevent automatic re-upload; capacity and the list are refreshed afterward. Card operations run between transfers on the display thread.
+Text substitutions use `{key:format}`, such as `{gpu.temp:0.0}`, `{time:HH:mm:ss}` and `{date:dd.MM}`. Common keys: `cpu.temp`, `cpu.load`, `cpu.clock`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.load`, `gpu.clock`, `gpu.power`, `gpu.mem.load`, `gpu.fan`, `ram.load`, `ram.used`, `ram.free`, `board.temp`, `pump.rpm`, `fan.rpm`. LibreHardwareMonitor IDs are also supported; find them in **Sensors** or `samalcd-cli sensors`.
 
 ## Diagnostic logs
 
-App → **Diagnostics** provides a persistent **Debug logs** switch, **Open log folder** and **Export diagnostic logs**. Basic operations and errors are recorded even with Debug off. Debug adds interface interactions, crop gestures, FFmpeg arguments, USB text commands/replies and periodic memory/transfer counters. Raw frames, media contents and entire user layouts are excluded. The default is Debug off; changing this setting does not apply pending image edits.
+**App → Diagnostics** provides a persistent **Debug logs** switch, **Open log folder** and **Export diagnostic logs**. Basic operations and errors are always recorded. Debug adds interface interactions, crop gestures, FFmpeg arguments, USB text commands/replies and memory/transfer counters. Debug defaults to off and does not apply pending image edits.
 
-Logs live in `%LOCALAPPDATA%/SamaLcd/logs`, use UTC timestamps, session/operation IDs and thread IDs, and flush after each record. Files rotate at 2 MiB with up to 10 retained files. Errors include exception stacks and inner exceptions; video operations include durations and exit results. Logging I/O failures are isolated from application operations and shown on the diagnostics card. Export creates a ZIP with retained logs, a runtime/device/settings snapshot and a bounded, read-only query of recent SamaLcd Windows crash events. Export does not copy images or videos and does not upload anything.
+Logs live in `%LOCALAPPDATA%/SamaLcd/logs`, with UTC timestamps, session/operation IDs, thread IDs and exception stacks. Every record is flushed; files rotate at 2 MiB with up to 10 retained files. Export creates a ZIP containing logs, a runtime/device/settings snapshot and a bounded read-only query of recent SAMA LCD Windows crash events. Media files, raw frames and entire user layouts are excluded; nothing is uploaded automatically.
 
-Managed startup/UI/task errors, WebView2 process failures and decoder thread failures are recorded. A session without a clean exit is marked in the next session's log. Native crashes can terminate before managed exception handlers run; session markers and Windows events provide additional evidence. For a recurring issue, enable Debug, reproduce the operations, restart if needed, then export the diagnostics ZIP.
+For a recurring issue, enable Debug, reproduce the operations, restart if needed, then export the ZIP. An incomplete session is marked on the next start. Native failures can bypass managed exception handlers; Windows events provide additional evidence. WebView2 dialogs are queued after callbacks return, following [Microsoft's threading guidance](https://learn.microsoft.com/microsoft-edge/webview2/concepts/threading-model#reentrancy). Decoder-reader exceptions are caught and logged.
 
-WebView2 messages are dispatched onto the UI queue before any file/save dialog opens, following [Microsoft's threading guidance](https://learn.microsoft.com/microsoft-edge/webview2/concepts/threading-model#reentrancy). This avoids running a nested modal message loop inside a WebView2 callback. Preview notifications are coalesced while the UI is busy, and unexpected decoder-reader exceptions are caught and logged.
+## Build and development
+
+```powershell
+dotnet build
+dotnet test
+.\publish.ps1
+```
+
+Publishing creates the tray app in `publish/` and the CLI in `publish/cli/`. Keep executables with their dependencies and resource folders.
+
+- [SamaLcd.Core](src/SamaLcd.Core): device protocol, rendering, sensors, display loop and diagnostics.
+- [SamaLcd](src/SamaLcd): Windows tray app and local WebView2 UI using bundled daisyUI/Tailwind assets.
+- [SamaLcd.Cli](src/SamaLcd.Cli): command-line utilities.
+- [Tests](tests/SamaLcd.Tests): protocol references, rendering, localization, storage consent and diagnostics.
+
+Open `src/SamaLcd/wwwroot/index.html` in a normal browser to preview with mock data. Add widget types in `Rendering/Theme.cs` and drawing logic in `ThemeRenderer`.
+
+Translations shared by native and web UI live in `src/SamaLcd.Core/Localization/*.json`. After catalog edits, run `node scripts/generate-locales.mjs`, then `dotnet test`. The committed browser bundle supports standalone preview. Keep all four README versions synchronized when documenting behavior changes.
+
+## Command-line utilities
+
+Use `publish/cli/samalcd-cli.exe` with:
+
+| Command | Purpose |
+|---|---|
+| `ports`, `info`, `sensors` | List ports, identify the display, inspect sensors |
+| `brightness 50`, `color "#FF0000"`, `image pic.png` | Set brightness, color or an image |
+| `theme <folder> [seconds] [--bg <color-or-file>]` | Run a theme |
+| `render <folder> out.png` | Render without accessing the device |
+| `bench [frames]` | Measure transfer speed |
+| `ls [folder]` | List files and storage |
+| `upload <file> <remote-path>`, `play <remote-path>` | Upload or play a device file |
+| `fit-video <source> <budget-bytes> <output>` | Encode within a byte budget |
+| `raw <code> [text]` | Send an experimental command |
+
+Use `--port COM3` to select a port. Exit other display software before accessing the device.
+
+## Device protocol
+
+The tested display exposes `VID_1D6B&PID_0121` in working mode and `VID_1A86&PID_CA21` / `CT21INCH` in boot mode. Opening the boot-mode port wakes it. A tested identity is `chs_5inch.dev1_rom1.88`. The protocol was reverse-engineered from `Sama.exe` and is related to Turing Smart Screen rev C; compatibility depends on hardware and firmware.
+
+| Command | Code | Payload / reply |
+|---|---|---|
+| Hello | 1 | `C5 D3` → `chs_…rom<version>` |
+| Storage | 100 | Internal total/used/free, SD total/used/free, in KiB |
+| List directory | 101 | Path → `result:dir:…file:a.mp4/b.mp4/` |
+| Delete file | 102 | File path |
+| File size | 110 | Path → bytes; `0` if missing |
+| Create/upload file | 111 | Path + size LE32 → `create_success`, bytes, `file_rev_done` |
+| Play video | 120 | Path, flag 1 → `play_video_success` |
+| Stop video / media | 121 / 150 | No text payload |
+| Brightness | 123 | One byte; the original app scales 0–255 by 0.76 |
+| Full frame | 200 | W×H×4 bytes BGRA |
+| Overlay | 202 + 208 | BGRA + mask `[index:24][length:16]…EF 69` |
+| Differential frame | 204 | Sequence BE32, optional mask length BE32, segments, `EF 69` |
+| Status | 207 | `needReSend:X\|renderCnt:N` |
+
+Commands use 250-byte packets: `[code][EF 69][length BE32][flag][0 0][payload at offset 10]`. Data packets carry 249 useful bytes each. Stop playback before uploading. The tested device has about 2.6 MiB internal storage; SD capacity varies. See [FrameCodec.cs](src/SamaLcd.Core/Device/FrameCodec.cs) for pixel/segment encoding and the tests for byte-level comparisons with original SAMA output.
