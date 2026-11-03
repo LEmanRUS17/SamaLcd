@@ -25,6 +25,10 @@ try
             }
             break;
 
+        case "usb-restart":
+            if (!PortLocator.RestartUsb(Log)) Console.WriteLine("Nothing restarted (no panel found, or not running as administrator).");
+            break;
+
         case "info":
             using (var dev = LcdDevice.Connect(port, log: Log))
             {
@@ -189,6 +193,7 @@ try
 
                   ports                     list serial ports and mark the panel
                   info                      connect and print panel identity
+                  usb-restart               restart the panel's USB device when its port no longer opens (admin)
                   brightness <0-100>        set backlight
                   color <#RRGGBB>           fill the screen with a colour
                   image <file>              show a picture (first frame of a GIF)

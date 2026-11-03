@@ -1,7 +1,7 @@
 'use strict';
 // UI of SamaLcd. Talks to MainForm through WebView2 messages:
 //   host -> page: {type:'state'|'frame'|'status'|'sensors'|'toast', ...}
-//   page -> host: {cmd:'ready'|'set'|'pickFile'|'layout'|'sensors'|'openThemes'|'reloadThemes'|'openUrl', ...}
+//   page -> host: {cmd:'ready'|'set'|'pickFile'|'layout'|'sensors'|'openThemes'|'reloadThemes'|'reconnect'|'openUrl', ...}
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -226,6 +226,7 @@ function renderGallery(s) {
 }
 $('#pickFile').onclick = () => host.send({ cmd: 'pickFile' });
 $('#openThemes').onclick = () => host.send({ cmd: 'openThemes' });
+for (const b of [$('#reconnect'), $('#reconnect2')]) b.onclick = () => host.send({ cmd: 'reconnect' });
 $('#reloadThemes').onclick = () => host.send({ cmd: 'reloadThemes' });
 document.addEventListener('click', e => { const u = e.target.closest('[data-url]'); if (u) host.send({ cmd: 'openUrl', url: u.dataset.url }); });
 

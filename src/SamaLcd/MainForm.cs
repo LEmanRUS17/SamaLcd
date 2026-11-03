@@ -66,6 +66,7 @@ sealed class MainForm : Form
         menu.Items.Add("Открыть", null, (_, _) => ShowWindow());
         menu.Items.Add(_themesMenu);
         menu.Items.Add(_pauseMenu);
+        menu.Items.Add("Переподключить экран", null, (_, _) => Reconnect());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Выход", null, (_, _) => ExitApp());
         _pauseMenu.Click += (_, _) => SetPaused(!_engine.Paused);
@@ -180,6 +181,7 @@ sealed class MainForm : Form
                     Directory.CreateDirectory(_settings.ResolvedGalleryDirectory);
                     Process.Start("explorer.exe", _settings.ResolvedGalleryDirectory);
                     break;
+                case "reconnect": Reconnect(); break;
                 case "reloadGallery": PostState(); break;
                 case "reloadThemes":
                     LoadThemeList();
@@ -535,6 +537,13 @@ sealed class MainForm : Form
         if (!paused) _engine.Invalidate();
         PostState();
         PostStatus();
+    }
+
+    /// <summary>Reopens the port; a paused screen is resumed, since the engine only connects while running.</summary>
+    private void Reconnect()
+    {
+        _engine.Reconnect();
+        if (_engine.Paused) SetPaused(false);
     }
 
     private void ShowWindow()

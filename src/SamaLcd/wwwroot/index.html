@@ -21,6 +21,10 @@
     <div id="conn" class="badge badge-soft badge-warning gap-1 ml-2 whitespace-nowrap"><span class="status status-warning"></span> поиск экрана</div>
     <div id="status" class="text-sm opacity-60 truncate"></div>
   </div>
+  <button id="reconnect" class="btn btn-ghost btn-sm gap-1" title="Закрыть порт и подключиться к экрану заново">
+    <svg class="size-4 fill-current" viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 0-7.75 6H2l3.5 4L9 10H6.34A6 6 0 1 1 6 14H4a8 8 0 1 0 8-10Z"/></svg>
+    Переподключить
+  </button>
   <label class="label text-sm gap-2 cursor-pointer">
     <input id="paused" type="checkbox" class="toggle toggle-sm toggle-warning"> Пауза
   </label>
@@ -235,6 +239,7 @@
           <h2 class="card-title">Экран</h2>
           <div id="deviceInfo" class="text-sm font-mono opacity-80">—</div>
           <div id="traffic" class="text-sm opacity-60"></div>
+          <div class="card-actions"><button id="reconnect2" class="btn btn-sm">Переподключить экран</button></div>
         </div>
       </div>
     </section>
