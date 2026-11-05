@@ -44,6 +44,7 @@ static class Program
                 int shot = Array.IndexOf(args, "--screenshot");
                 using var form = new MainForm(settings, engine, sensors) { ScreenshotPath = shot >= 0 && shot + 1 < args.Length ? args[shot + 1] : null };
                 if (!minimized) form.Show();
+                using var displayPower = new DisplayPowerNotifications(engine.RecoverVideoAfterDisplayWake);
                 engine.Start();
                 Application.Run(form.TrayContext);
             }

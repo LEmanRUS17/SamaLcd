@@ -23,8 +23,8 @@ public sealed class DisplayEngine : IDisposable
     private Theme? _baseTheme;
     private string? _reportedBackgroundError;
     private VideoRequest? _wantedVideo;   // what should play on the panel
-    private VideoRequest? _activeVideo;   // what the panel is playing now
-    private string? _preparedVideo;       // the converted file the panel plays
+    private volatile ActiveVideo? _activeVideo;
+    private ActiveVideo? _videoToRecover;
     private string? _streamingFallback;   // a file the panel failed to play, streamed instead
     private int _videoFailures;
     private LcdDevice? _device;
@@ -100,7 +100,6 @@ public sealed class DisplayEngine : IDisposable
                         if (!Paused || _activeVideo != null) _device!.StopPlayback();
                         Paused = true;
                         _activeVideo = null;
-                        _preparedVideo = null;
                         _needFull = true;
                         _device!.TextCommand(LcdCommand.DeleteFile, "/mnt/SDCARD/video/" + name, 500);
                     });
@@ -202,6 +201,7 @@ public sealed class DisplayEngine : IDisposable
     }
 
     private sealed record VideoRequest(string Source, ImageFit Fit, int Rotation, SquareCrop? Crop);
+    private sealed record ActiveVideo(VideoRequest Request, string LocalPath, string RemotePath);
 
     /// <summary>
     /// The animated background the panel plays by itself, or null. Frames are then rendered without it
@@ -211,7 +211,11 @@ public sealed class DisplayEngine : IDisposable
     {
         get
         {
-            lock (_sync) return _wantedVideo is { } v ? new PreviewMedia(v.Source, v.Fit, _activeVideo == v ? _preparedVideo : null, v.Crop) : null;
+            lock (_sync)
+            {
+                var active = _activeVideo;
+                return _wantedVideo is { } v ? new PreviewMedia(v.Source, v.Fit, active?.Request == v ? active.LocalPath : null, v.Crop) : null;
+            }
         }
     }
 
@@ -247,6 +251,14 @@ public sealed class DisplayEngine : IDisposable
     public void Invalidate()
     {
         _needFull = true;
+        _wake.Set();
+    }
+
+    /// <summary>Requests a restart of the current on-device video on the display thread.</summary>
+    public void RecoverVideoAfterDisplayWake()
+    {
+        if (!_running || Paused || _activeVideo is not { } active) return;
+        Interlocked.Exchange(ref _videoToRecover, active);
         _wake.Set();
     }
 
@@ -321,6 +333,7 @@ public sealed class DisplayEngine : IDisposable
             VideoRequest? wanted;
             lock (_sync) wanted = _wantedVideo;
             FrameRendered?.Invoke(PreviewOf(frame));
+            var videoToRecover = Interlocked.Exchange(ref _videoToRecover, null);
             if (Paused) return interval;
 
             EnsureConnected();
@@ -329,8 +342,10 @@ public sealed class DisplayEngine : IDisposable
                 _device!.SetBrightness(_pendingBrightness, _settings.BrightnessScale);
                 _pendingBrightness = -1;
             }
-            if (wanted != _activeVideo) SwitchVideo(wanted);
+            if (wanted != _activeVideo?.Request) SwitchVideo(wanted);
             lock (_sync) if (Paused || wanted != _wantedVideo) return interval;
+            if (videoToRecover != null && ReferenceEquals(videoToRecover, _activeVideo))
+                ReplayVideo(videoToRecover);
             bool overlay = _activeVideo != null;
             if (overlay) interval = Math.Max(interval, 200); // the panel draws the video; widgets need no high rate
 
@@ -371,6 +386,23 @@ public sealed class DisplayEngine : IDisposable
         return interval;
     }
 
+    private void ReplayVideo(ActiveVideo video)
+    {
+        using var operation = AppLog.Operation("video.display_wake", new { video.RemotePath });
+        try
+        {
+            _device!.StopPlayback();
+            _device.PlayVideo(video.RemotePath);
+            _needFull = true;
+            _lastFrame = null;
+        }
+        catch (Exception e)
+        {
+            operation.Fail(e);
+            throw;
+        }
+    }
+
     /// <summary>Starts, changes or stops the video played by the panel.</summary>
     private void SwitchVideo(VideoRequest? wanted)
     {
@@ -380,7 +412,6 @@ public sealed class DisplayEngine : IDisposable
         {
             _device!.StopPlayback();
             _activeVideo = null;
-            _preparedVideo = null;
             return;
         }
         PreparedVideo prepared;
@@ -397,11 +428,11 @@ public sealed class DisplayEngine : IDisposable
             FallBackToStreaming(wanted, e);
             return;
         }
-        _preparedVideo = prepared.LocalPath;
+        string remote;
         try
         {
             lock (_sync) if (!_running || _wantedVideo != wanted) throw new OperationCanceledException();
-            var remote = EnsureUploaded(prepared, wanted);
+            remote = EnsureUploaded(prepared, wanted);
             _device!.PlayVideo(remote);
             Storage = _device.StorageInfo();
         }
@@ -423,7 +454,7 @@ public sealed class DisplayEngine : IDisposable
             return;
         }
         _videoFailures = 0;
-        _activeVideo = wanted;
+        _activeVideo = new ActiveVideo(wanted, prepared.LocalPath, remote);
         ReportStatus("Playing video on display: {0}", Path.GetFileName(wanted.Source));
     }
 
@@ -437,7 +468,6 @@ public sealed class DisplayEngine : IDisposable
         _streamingFallback = wanted.Source;
         ApplyBackgroundSettings();
         _activeVideo = null;
-        _preparedVideo = null;
     }
 
     /// <summary>Copies the converted video to the panel unless it is already there; returns its path on the panel.</summary>
